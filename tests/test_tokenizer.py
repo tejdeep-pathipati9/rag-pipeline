@@ -3,6 +3,7 @@
 import pytest
 from transformers import BertTokenizer
 
+from src.chunking import chunk_text
 from src.tokenizer import ModelTokenizer
 
 
@@ -52,3 +53,33 @@ def test_empty_input_has_no_content_tokens(tokenizer):
     """Empty input should not acquire model boundary tokens."""
     assert tokenizer.encode("") == []
     assert tokenizer.decode([]) == ""
+
+
+def test_offsets_point_to_original_subwords(tokenizer):
+    """Normalized token IDs still map to the original capitalized source."""
+    text = "Northstar rebooked my flight."
+    ids, offsets = tokenizer.encode_with_offsets(text)
+
+    assert ids == tokenizer.encode(text)
+    assert [text[start:end] for start, end in offsets] == [
+        "North",
+        "star",
+        "re",
+        "book",
+        "ed",
+        "my",
+        "flight",
+        ".",
+    ]
+
+
+def test_real_tokenizer_chunks_preserve_source_and_token_budget(tokenizer):
+    """Subword splits must return original text that still fits when encoded again."""
+    text = "Northstar rebooked my flight. Northstar rebooked my flight."
+
+    chunks = chunk_text(text, tokenizer=tokenizer, chunk_size=5, overlap=1)
+
+    assert chunks[0] == "Northstar rebooked"
+    assert chunks[-1].endswith("my flight.")
+    assert all(len(tokenizer.encode(chunk)) <= 5 for chunk in chunks)
+    assert all(chunk in text for chunk in chunks)
