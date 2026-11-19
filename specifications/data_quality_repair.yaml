@@ -1,0 +1,14 @@
+# Apply this overlay after demonstrating the intentionally broken corpus.
+# 2025 source file is deliberately mislabeled 'current' in its YAML frontmatter.
+# Do not correct the source before capturing the flawed answer and retrieval trace.
+document_id: NS-CARE-2025
+field_overrides:
+  status: superseded
+  effective_to: '2025-12-31'
+  superseded_by: NS-CARE-2026
+expected_current_version: NS-CARE-2026
+reindex_required: true
+verification:
+  sample_query: "For my October 2026 crew scheduling delay and overnight connection, am I eligible for a hotel?"
+  expected_current_policy: NS-CARE-2026#4.5
+  historical_only_policy: NS-CARE-2025#3.2
