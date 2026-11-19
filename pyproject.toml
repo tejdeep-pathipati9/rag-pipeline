@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools==84.2.1"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "flight-disruption-assistant"
+version = "0.1.0"
+description = "Flight Disruption Assistant: source-grounded RAG for disrupted connections"
+requires-python = ">=3.11"
+dependencies = [
+  "PyYAML==6.0.3",
+  "markdown-it-py==4.3.0",
+  "pydantic==2.14.3",
+  "python-dotenv==1.2.4",
+  "pinecone==10.3.0",
+]
+
+[project.optional-dependencies]
+smoke = ["sentence-transformers==6.3.0"]
+dev = ["pytest==9.2.0", "ruff==0.17.5"]
+
+[project.scripts]
+flight-disruption-assistant = "src.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src", "src.*"]
+namespaces = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-ra"
+markers = ["integration: opt-in live Pinecone and local-model smoke (network required)"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

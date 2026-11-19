@@ -221,3 +221,14 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Flight Disruption Assistant local state and experiment outputs
+.DS_Store
+.env.*
+!.env.example
+artifacts/runs/
+.cache/
+
+# Markdown Files
+PLAN.md
+assignment.md
