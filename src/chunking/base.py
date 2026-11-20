@@ -15,6 +15,8 @@ class TextChunk:
     text: str
     start: int
     end: int
+    parent_start: int | None = None
+    parent_end: int | None = None
 
 
 class BaseChunker(ABC):

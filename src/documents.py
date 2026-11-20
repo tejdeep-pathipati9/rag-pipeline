@@ -108,7 +108,7 @@ def _section_ranges(body: str) -> list[tuple[str, int, int]]:
 
 
 def prepare_chunks(corpus_dir: Path, chunker) -> list[dict]:
-    """Prepare the current recursive baseline with stable IDs and flat source metadata.
+    """Prepare chunks with stable IDs and flat source metadata.
 
     Positions refer to the Markdown body, excluding YAML frontmatter. Introductory
     text before the first numbered heading has no section ID; none is invented.
@@ -119,6 +119,7 @@ def prepare_chunks(corpus_dir: Path, chunker) -> list[dict]:
     if not paths:
         raise ValueError(f"No Markdown sources found in {corpus_dir}")
 
+    strategy = chunker.strategy
     documents_seen = set()
     records = []
     for path in paths:
@@ -144,7 +145,7 @@ def prepare_chunks(corpus_dir: Path, chunker) -> list[dict]:
                 document_id,
                 metadata["version"],
                 metadata["source_path"],
-                "recursive",
+                strategy,
                 chunker.chunk_size,
                 chunker.overlap,
                 chunk.start,
@@ -159,11 +160,28 @@ def prepare_chunks(corpus_dir: Path, chunker) -> list[dict]:
                     **metadata,
                     # Remove duplicate IDs while retaining their order in the source.
                     "section_ids": list(dict.fromkeys(section_ids)),
-                    "chunk_strategy": "recursive",
+                    "chunk_strategy": strategy,
                     "chunk_size": chunker.chunk_size,
                     "chunk_overlap": chunker.overlap,
                     "start_char": chunk.start,
                     "end_char": chunk.end,
                 }
             )
+            if chunk.parent_start is not None and chunk.parent_end is not None:
+                start, end = chunk.parent_start, chunk.parent_end
+                parent_text = body[start:end]
+                parent_identity = [document_id, metadata["version"], start, end, parent_text]
+                records[-1].update(
+                    {
+                        "parent_id": hashlib.sha256(
+                            json.dumps(parent_identity, ensure_ascii=False).encode()
+                        ).hexdigest(),
+                        "parent_body": parent_text,
+                        "parent_start_char": start,
+                        "parent_end_char": end,
+                        "parent_section_ids": [
+                            section for section, a, b in section_ranges if a < end and start < b
+                        ],
+                    }
+                )
     return records

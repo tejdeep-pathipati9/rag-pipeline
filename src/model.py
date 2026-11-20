@@ -13,7 +13,9 @@ class Decision(BaseModel):
     """One recovery option, its supporting citations and any missing facts."""
 
     model_config = ConfigDict(extra="forbid")
-    status: Literal["ELIGIBLE", "NOT_ELIGIBLE", "NEEDS_REVIEW", "OUT_OF_SCOPE"]
+    status: Literal[
+        "ELIGIBLE", "NOT_ELIGIBLE", "NEEDS_REVIEW", "OUT_OF_SCOPE", "NEEDS_PASSENGER_DECISION"
+    ]
     explanation: str
     citations: list[str]
     missing_facts: list[str]
@@ -40,14 +42,33 @@ Check source type, status, version and effective dates against the passenger's t
 Treat historical cases as examples, never as the passenger's facts or current policy.
 Use operational records only for the case named in the question. Do not borrow another case's facts.
 Real-airline regulatory digests do not establish fictional Northstar contractual benefits.
-Do not assume missing itinerary, cause, overnight, residence, travel-date or passenger-choice facts.
-If evidence is incomplete or conflicting, use NEEDS_REVIEW and state the missing facts/evidence.
+Use clear passenger statements as scenario facts when applying a retrieved rule. For example,
+if the passenger says both domestic legs were on one ticket and the delay made them miss the
+connection, use those facts for the eligibility assessment. A stated final or approved cause
+can be used as such. When a resolved decision rests on passenger statements, qualify it with
+"on the facts you provided" where helpful. Do not require case records just to repeat those facts.
+Operational verification, inventory, ticketing, and payment may still be required for fulfillment.
+If a material fact or rule is genuinely missing or conflicting, use NEEDS_REVIEW and name it.
+Use OUT_OF_SCOPE for an express policy scope exclusion, such as separate tickets under the
+protected-connection rule. Use NOT_ELIGIBLE for an in-scope case that fails a rule condition.
+For refund only, use NEEDS_PASSENGER_DECISION when the evidence establishes a qualifying change
+or cancellation and an open offer awaiting a choice. Cite the qualifying rule and identify the
+pending choice. Use NEEDS_REVIEW when those prerequisites are unverified or contradictory.
+A stated refusal is a decision on that offer. When the retrieved policy and facts establish
+refund eligibility after a decline, use ELIGIBLE even if the passenger has not requested
+payment or the amount is unknown. Use NEEDS_PASSENGER_DECISION only for a known unanswered
+offer. Do not invent a further offer or infer a pending choice from an unprocessed refund.
+Compare arrival at the final destination with the original schedule. A delay measured in hours
+can still move arrival into the following day. Do not infer a conflict without actual times.
 Do not silently repair source metadata, invent rules, or imply a booking/refund was executed.
 
 Cite only the supplied allowed_citations, using DOCUMENT_ID#SECTION_ID exactly.
 Each definite decision must have supporting citations. Cite only claims supported by the supplied
 text, not unseen portions of a section. When more facts/evidence are needed, list them explicitly.
-The summary must be consistent with the decisions. Keep explanations concise.
+The summary is the compact, user-facing answer. Lead with the direct answer in one or two short
+sentences. Include any qualification or next step essential to the question. Leave the full
+timeline and administrative details in the decision explanations.
+Keep the summary consistent with the decisions and the explanations concise.
 """
 
 
@@ -110,8 +131,13 @@ def generate_answer(
         decision = getattr(answer, option)
         if set(decision.citations) - allowed_citations:
             raise ValueError(f"{option} contains an unretrieved citation.")
+        if decision.status == "NEEDS_PASSENGER_DECISION" and option != "refund":
+            raise ValueError("NEEDS_PASSENGER_DECISION applies only to refunds.")
         if decision.status != "NEEDS_REVIEW" and not decision.citations:
-            raise ValueError(f"A definite {option} decision requires a citation.")
-        if decision.status == "NEEDS_REVIEW" and not decision.missing_facts:
+            raise ValueError(f"The {option} decision requires a citation.")
+        if (
+            decision.status in ("NEEDS_REVIEW", "NEEDS_PASSENGER_DECISION")
+            and not decision.missing_facts
+        ):
             raise ValueError(f"The {option} review decision must identify missing facts.")
     return answer

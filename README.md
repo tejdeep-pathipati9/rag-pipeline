@@ -43,6 +43,14 @@ Each indexed chunk includes its original text, embedding, source metadata, secti
 
 Repeating ingestion with unchanged sources and configuration reuses the same chunk IDs. Use a new namespace when changing source content, chunk settings, or the embedding model; ingestion does not delete obsolete chunks from previous configurations.
 
+Preview the experimental Markdown chunker in its own namespace:
+
+```bash
+uv run python -m src --namespace markdown-original-minilm-v1 --chunk-strategy markdown --dry-run
+```
+
+It packs whole sections that fit, then tries complete blocks inside longer sections. Blocks that still exceed the limit use recursive splitting with the configured overlap. Each chunk remains a slice of the original Markdown.
+
 ## Retrieval
 
 Ask a question against the existing indexed namespace:
@@ -73,14 +81,24 @@ Generate an answer from the reranked hybrid retrieval results:
 uv run python -m src --namespace recursive-original-minilm-v1 --question "For FR-214 on 2026-10-14, what are my rebooking, hotel, and refund options?" --generate
 ```
 
-The output includes a summary and separate rebooking, hotel, and refund decisions, each with an explanation, citations, and missing facts. Citations use `DOCUMENT_ID#SECTION_ID` and are checked against the retrieved chunks. Missing evidence produces `NEEDS_REVIEW`; response validation checks structure and citation references, not the factual correctness of every explanation.
+The terminal shows a short answer followed by the three decision statuses and their source references. Add `--details` for explanations, missing facts, and full source titles, or `--json` for the structured response with retrieved chunks and ranking details. Missing evidence produces `NEEDS_REVIEW`. Citation validation checks that references were retrieved. Evaluate separately whether the cited text supports the explanation.
 
 Generation uses the configured Azure API and is opt-in. Omitting `--generate` runs retrieval only. API keys, independent rule specifications, and evaluation labels are never included in the generation prompt.
+
+## Evaluation
+
+Run the eight development cases against the configured Pinecone index and Azure deployment:
+
+```bash
+uv run python -m src --namespace recursive-original-minilm-v1 --evaluate
+```
+
+Add `--case-id FR-R002` to run one case. Select `--split test` for the 12 reserved cases after choosing a configuration. The CLI saves retrieved chunks, generated answers, exact status scores and evidence coverage by section ID under `artifacts/runs/`. Inspect the saved snippets to verify that the cited text supports each claim.
 
 ## Project data
 
 - `corpus/`: 18 synthetic source documents.
 - `specifications/`: independent rules, document manifest, and the unapplied repair overlay.
-- `evaluation/`: scenario fixtures and retrieval probes, kept outside the searchable corpus.
+- `evaluation/flight_disruption_gold_set.jsonl`: 20 labeled cases kept outside the searchable corpus.
 
 The original corpus includes one intentional stale-policy metadata defect for a later controlled debugging exercise.

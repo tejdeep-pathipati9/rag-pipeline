@@ -104,6 +104,30 @@ def test_review_decision_explains_missing_facts(evidence, response_data):
         generate_answer("Hotel rules?", evidence, client, model="test")
 
 
+@pytest.mark.parametrize(
+    ("option", "citations", "missing", "error"),
+    [
+        ("refund", ["NS-CARE-2026#4.1"], ["Passenger choice"], None),
+        ("refund", [], ["Passenger choice"], "requires a citation"),
+        ("refund", ["NS-CARE-2026#4.1"], [], "missing facts"),
+        ("hotel", ["NS-CARE-2026#4.1"], ["Passenger choice"], "only to refunds"),
+    ],
+)
+def test_pending_passenger_decision_is_a_cited_refund_status(
+    evidence, response_data, option, citations, missing, error
+):
+    response_data[option].update(
+        status="NEEDS_PASSENGER_DECISION", citations=citations, missing_facts=missing
+    )
+    client = make_client(FlightAnswer.model_validate(response_data))
+    if error:
+        with pytest.raises(ValueError, match=error):
+            generate_answer("What are my options?", evidence, client, model="test")
+    else:
+        answer = generate_answer("What are my options?", evidence, client, model="test")
+        assert answer.refund.status == "NEEDS_PASSENGER_DECISION"
+
+
 def test_no_evidence_returns_review_without_calling_model():
     """Missing retrieval results produce abstention instead of an unsupported model answer."""
     client = make_client(None)

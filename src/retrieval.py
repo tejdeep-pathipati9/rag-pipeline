@@ -10,6 +10,38 @@ TOP_K = 10
 RRF_K = 60
 RERANKER_MODEL = "cross-encoder/ms-marco-MiniLM-L6-v2"
 RERANKER_REVISION = "233902d25c440f23af6f7d6e94d2946bac0bee0a"
+EVIDENCE_TOKEN_BUDGET = 4000
+
+
+def assemble_evidence(chunks: list[dict], tokenizer, *, token_budget=EVIDENCE_TOKEN_BUDGET):
+    """Expand ranked children to stored source sections, deduplicate and bound context.
+
+    Count source content tokens with the embedding tokenizer, excluding prompt/metadata.
+    Scores still describe the selected child. Old namespaces retain child-only evidence.
+    """
+    if token_budget <= 0:
+        raise ValueError("Evidence token budget must be positive.")
+    evidence, seen, used = [], set(), 0
+    for chunk in chunks:
+        record = chunk.copy()
+        if "parent_id" in chunk:
+            record.update(
+                _id=chunk["parent_id"],
+                child_id=chunk["_id"],
+                body=chunk["parent_body"],
+                section_ids=chunk["parent_section_ids"],
+                start_char=chunk["parent_start_char"],
+                end_char=chunk["parent_end_char"],
+            )
+        if record["_id"] in seen:
+            continue
+        tokens = len(tokenizer.encode(record["body"]))
+        if used + tokens > token_budget:
+            continue
+        evidence.append(record)
+        seen.add(record["_id"])
+        used += tokens
+    return evidence
 
 
 def retrieve_dense(question: str, embeddings, index, *, namespace: str) -> list[dict]:

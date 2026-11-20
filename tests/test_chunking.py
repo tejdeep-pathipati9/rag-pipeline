@@ -7,8 +7,47 @@ predictable test substitute; the pipeline will use its embedding model's tokeniz
 
 import pytest
 
+from src.chunking import MarkdownChunker
 from src.chunking.base import BaseChunker
 from src.chunking.recursive import RecursiveChunker, chunk_text
+
+
+def test_markdown_chunker_keeps_numbered_clauses_separate(tokenizer):
+    first = "## 1. Hotel\nAn overnight stay can qualify."
+    second = "## 2. Refund\nA passenger may decline travel."
+    text = first + "\n\n" + second
+    chunks = MarkdownChunker(tokenizer, chunk_size=12, overlap=5).chunk_with_offsets(text)
+
+    assert [chunk.text.strip() for chunk in chunks] == [first, second]
+    assert all(text[chunk.start : chunk.end] == chunk.text for chunk in chunks)
+
+
+def test_markdown_chunker_packs_adjacent_sections_that_fit(tokenizer):
+    text = "# Travel policy\n\n## 1. Hotel\nKeep the receipt.\n\n## 2. Refund\nCheck the offer."
+    assert MarkdownChunker(tokenizer, chunk_size=20, overlap=5).chunk_text(text) == [text]
+
+
+def test_markdown_chunker_moves_a_table_intact_when_remaining_space_is_too_small(tokenizer):
+    opening = "Check the booking record for the exact itinerary before continuing."
+    table = "| Field | Value |\n| --- | --- |\n| Status | Offered |\n| Destination | SFO |"
+    text = opening + "\n\n" + table
+    budget = len(tokenizer.encode(table))
+    chunks = MarkdownChunker(tokenizer, chunk_size=budget, overlap=0).chunk_with_offsets(text)
+
+    assert [chunk.text.strip() for chunk in chunks] == [opening, table]
+    assert all(text[chunk.start : chunk.end] == chunk.text for chunk in chunks)
+
+
+def test_markdown_chunker_reuses_bounded_splitting_for_an_oversized_block(tokenizer):
+    text = "one two three four five six seven eight nine ten"
+    chunks = MarkdownChunker(tokenizer, chunk_size=4, overlap=1).chunk_with_offsets(text)
+
+    assert [chunk.text for chunk in chunks] == [
+        "one two three four",
+        "four five six seven",
+        "seven eight nine ten",
+    ]
+    assert all(text[chunk.start : chunk.end] == chunk.text for chunk in chunks)
 
 
 @pytest.mark.parametrize("text", ["", "   \n\t"])

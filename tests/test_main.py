@@ -40,10 +40,10 @@ def test_missing_index_reports_configuration_error(monkeypatch, tokenizer, capsy
     client.Index.assert_not_called()
 
 
-@pytest.mark.parametrize("generate", [False, True])
+@pytest.mark.parametrize("mode", ["retrieval", "answer", "details", "json"])
 @pytest.mark.parametrize("empty_results", [False, True])
 def test_question_command_runs_retrieval_without_preparing_or_upserting(
-    monkeypatch, tokenizer, capsys, generate, empty_results
+    monkeypatch, tokenizer, capsys, mode, empty_results
 ):
     """Retrieval queries existing records and never starts corpus ingestion."""
     model = SimpleNamespace(
@@ -58,7 +58,14 @@ def test_question_command_runs_retrieval_without_preparing_or_upserting(
     client.describe_index.return_value.to_dict.return_value = {"host": "https://test-index"}
     index = client.Index.return_value.__enter__.return_value
     hits = [
-        {"_id": "chunk-1", "rrf_score": 1 / 61, "body": "Hotel rules.", "section_ids": ["4.1"]},
+        {
+            "_id": "chunk-1",
+            "rrf_score": 1 / 61,
+            "body": "Hotel rules.",
+            "section_ids": ["4.1", "4.2"],
+            "title": "Passenger Care Policy",
+            "document_id": "CARE",
+        },
         {"_id": "chunk-2", "rrf_score": 1 / 62, "body": "Overnight rules.", "section_ids": ["4.2"]},
     ]
     if empty_results:
@@ -67,6 +74,8 @@ def test_question_command_runs_retrieval_without_preparing_or_upserting(
     reranker.predict.return_value = [0.1, 0.9]
     load_reranker = Mock(return_value=reranker)
     monkeypatch.setattr(cli, "CrossEncoder", load_reranker)
+    hide_progress = Mock()
+    monkeypatch.setattr(cli.transformers_logging, "disable_progress_bar", hide_progress)
     reranked_hits = (
         []
         if empty_results
@@ -83,7 +92,19 @@ def test_question_command_runs_retrieval_without_preparing_or_upserting(
     monkeypatch.setattr(cli, "validate_index", Mock())
     monkeypatch.setattr(cli, "Pinecone", Mock(return_value=client))
     foundry = MagicMock()
-    generation = Mock(return_value=SimpleNamespace(model_dump=lambda: {"summary": "Needs review."}))
+    review = {
+        "status": "NEEDS_REVIEW",
+        "explanation": "The overnight wait is unconfirmed.",
+        "citations": [] if empty_results else ["CARE#4.1", "CARE#4.2"],
+        "missing_facts": ["The next flight's departure time"],
+    }
+    answer = cli.FlightAnswer.model_validate(
+        {
+            "summary": "Please confirm the overnight wait.",
+            **dict.fromkeys(("rebooking", "hotel", "refund"), review),
+        }
+    )
+    generation = Mock(return_value=answer)
     monkeypatch.setattr(cli, "AnthropicFoundry", foundry)
     monkeypatch.setattr(cli, "generate_answer", generation)
     monkeypatch.setenv("PINECONE_API_KEY", "test-key")
@@ -93,30 +114,51 @@ def test_question_command_runs_retrieval_without_preparing_or_upserting(
     monkeypatch.setenv("LLM_BASE_URL", "https://example.services.ai.azure.com/anthropic")
 
     arguments = ["--namespace", "recursive-test", "--question", "Hotel rules?"]
-    if generate:
+    if mode != "retrieval":
         arguments.append("--generate")
+    if mode == "json":
+        arguments.append("--json")
+    if mode == "details":
+        arguments.append("--details")
     cli.main(arguments)
 
     retrieve.assert_called_once_with("Hotel rules?", model, index, namespace="recursive-test")
     prepare.assert_not_called()
     upsert.assert_not_called()
-    output = json.loads(capsys.readouterr().out)
-    assert output["top_k_per_method"] == 10
-    assert output["retrieval_method"] == "hybrid"
-    assert output["matches"] == reranked_hits
-    assert output["reranker_model"] == cli.RERANKER_MODEL
-    assert output["reranker_revision"] == cli.RERANKER_REVISION
+    stdout = capsys.readouterr().out
+    if mode in {"answer", "details"}:
+        assert stdout.startswith("Please confirm the overnight wait.\n")
+        assert "Hotel · Needs review" in stdout
+        if mode == "answer":
+            hide_progress.assert_called_once()
+            assert "The overnight wait is unconfirmed." not in stdout
+            assert "The next flight's departure time" not in stdout
+            assert ("CARE §4.1, §4.2" in stdout) == bool(hits)
+        else:
+            hide_progress.assert_not_called()
+            assert "The next flight's departure time" in stdout
+            assert ("Passenger Care Policy (CARE), §4.1, §4.2" in stdout) == bool(hits)
+        assert '"matches"' not in stdout
+        assert '"rrf_score"' not in stdout
+    else:
+        output = json.loads(stdout)
+        assert output["top_k_per_method"] == 10
+        assert output["retrieval_method"] == "hybrid"
+        assert output["matches"] == reranked_hits
+        assert output["reranker_model"] == cli.RERANKER_MODEL
+        assert output["reranker_revision"] == cli.RERANKER_REVISION
+        if mode == "json":
+            assert output["answer"] == answer.model_dump()
     if empty_results:
         load_reranker.assert_not_called()
         reranker.predict.assert_not_called()
     else:
         load_reranker.assert_called_once()
-    if generate:
+    if mode != "retrieval":
         llm = foundry.return_value.__enter__.return_value
         generation.assert_called_once_with(
             "Hotel rules?", reranked_hits, llm, model="my-opus-deployment"
         )
-        assert output["answer"] == {"summary": "Needs review."}
     else:
         generation.assert_not_called()
         foundry.assert_not_called()
