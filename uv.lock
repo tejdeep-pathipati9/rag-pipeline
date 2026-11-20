@@ -170,6 +170,7 @@ dependencies = [
     { name = "pydantic" },
     { name = "python-dotenv" },
     { name = "pyyaml" },
+    { name = "sentence-transformers" },
     { name = "transformers" },
 ]
 
@@ -177,9 +178,6 @@ dependencies = [
 dev = [
     { name = "pytest" },
     { name = "ruff" },
-]
-smoke = [
-    { name = "sentence-transformers" },
 ]
 
 [package.metadata]
@@ -191,10 +189,10 @@ requires-dist = [
     { name = "python-dotenv", specifier = "==1.2.4" },
     { name = "pyyaml", specifier = "==6.0.3" },
     { name = "ruff", marker = "extra == 'dev'", specifier = "==0.17.5" },
-    { name = "sentence-transformers", marker = "extra == 'smoke'", specifier = "==6.3.0" },
+    { name = "sentence-transformers", specifier = "==6.3.0" },
     { name = "transformers", specifier = "==5.23.0" },
 ]
-provides-extras = ["smoke", "dev"]
+provides-extras = ["dev"]
 
 [[package]]
 name = "fsspec"

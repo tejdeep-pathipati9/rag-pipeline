@@ -4,9 +4,7 @@ A retrieval-augmented generation (RAG) project for missed-connection questions a
 
 ## Status
 
-The corpus, specifications, and project/dependency setup are merged. The previous uncommitted implementation has been cleared so the pipeline can be rebuilt step by step.
-
-The tokenizer and baseline chunking are implemented locally with tests. Full ingestion, retrieval, and answer generation remain planned. Saved results from the earlier Pinecone demo remain under `artifacts/runs/` as historical evidence.
+The corpus, specifications, and project setup are merged. Recursive chunking, local MiniLM embeddings, and Pinecone ingestion are implemented. Retrieval and answer generation are next.
 
 ## Setup
 
@@ -18,6 +16,24 @@ cp -n .env.example .env
 ```
 
 Keep credentials in the local `.env`. The pipeline is being built and reviewed one feature at a time.
+
+## Ingestion
+
+Run from the repository root. Set `PINECONE_API_KEY` and `PINECONE_INDEX_NAME` in `.env`. The existing document index uses stored `body` text and a 384-dimensional `body_vector` field.
+
+```bash
+# Inspect chunk counts without writing to Pinecone.
+uv run python -m src --namespace recursive-original-minilm-v1 --dry-run
+
+# Embed and index the corpus (200 content tokens, 40-token overlap).
+uv run python -m src --namespace recursive-original-minilm-v1
+
+uv run pytest -q
+```
+
+Each indexed chunk includes its original text, embedding, source metadata, section IDs, and character positions in the Markdown body. Only original text is sent to the embedding model; YAML metadata is stored separately. Text before numbered sections has an empty section list.
+
+Repeating ingestion with unchanged sources and configuration reuses the same chunk IDs. Use a new namespace when changing source content, chunk settings, or the embedding model; ingestion does not delete obsolete chunks from previous configurations.
 
 ## Project data
 

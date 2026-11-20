@@ -14,10 +14,10 @@ dependencies = [
   "python-dotenv==1.2.4",
   "pinecone==10.3.0",
   "transformers==5.23.0",
+  "sentence-transformers==6.3.0",
 ]
 
 [project.optional-dependencies]
-smoke = ["sentence-transformers==6.3.0"]
 dev = ["pytest==9.2.0", "ruff==0.17.5"]
 
 [tool.setuptools.packages.find]
