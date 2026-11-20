@@ -229,7 +229,9 @@ __marimo__/
 artifacts/runs/
 .cache/
 
-/evaluation/
+# Publish the active benchmark. Keep local copies and older fixtures out of Git.
+/evaluation/*
+!/evaluation/flight_disruption_gold_set.jsonl
 
 # Markdown Files
 PLAN.md
