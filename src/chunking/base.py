@@ -1,6 +1,16 @@
 """Shared chunking workflow; subclasses decide where each chunk should end."""
 
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class TextChunk:
+    """Original text and its character range in the input passed to the chunker."""
+
+    text: str
+    start: int
+    end: int
 
 
 class BaseChunker(ABC):
@@ -23,7 +33,11 @@ class BaseChunker(ABC):
         self.overlap = overlap
 
     def chunk_text(self, text: str) -> list[str]:
-        """Create token-bounded chunks using the subclass's boundary rule.
+        """Return just the text when callers do not need citation positions."""
+        return [chunk.text for chunk in self.chunk_with_offsets(text)]
+
+    def chunk_with_offsets(self, text: str) -> list[TextChunk]:
+        """Create token-bounded chunks together with their original source positions.
 
         Copy source text directly to preserve casing and internal whitespace.
         Whitespace at split boundaries is removed; short input is unchanged.
@@ -34,24 +48,31 @@ class BaseChunker(ABC):
 
         token_ids = self.tokenizer.encode(text)
         if len(token_ids) <= self.chunk_size:
-            return [text]
+            return [TextChunk(text, 0, len(text))]
 
         chunks = []
         remaining_text = text.strip()
+        # Track source positions as we consume text, even when passages repeat.
+        source_start = len(text) - len(text.lstrip())
 
         while remaining_text:
             token_ids, token_positions = self.tokenizer.encode_with_offsets(remaining_text)
 
             if len(token_ids) <= self.chunk_size:
-                chunks.append(remaining_text)
+                chunks.append(
+                    TextChunk(remaining_text, source_start, source_start + len(remaining_text))
+                )
                 break
 
             chunk = self._create_chunk(remaining_text, token_positions)
-            chunks.append(chunk)
+            chunks.append(TextChunk(chunk, source_start, source_start + len(chunk)))
 
             chunk_ids, chunk_positions = self.tokenizer.encode_with_offsets(chunk)
             next_start = self._choose_overlap_start(chunk_positions, len(chunk))
-            remaining_text = remaining_text[next_start:].lstrip()
+            next_text = remaining_text[next_start:]
+            leading_whitespace = len(next_text) - len(next_text.lstrip())
+            source_start += next_start + leading_whitespace
+            remaining_text = next_text.lstrip()
 
         return chunks
 

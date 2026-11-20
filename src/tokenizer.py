@@ -11,9 +11,13 @@ class ModelTokenizer:
     Loading a tokenizer does not load the embedding model's weights.
     """
 
-    def __init__(self, model_name: str, *, revision: str | None = None):
+    def __init__(
+        self, model_name: str, *, revision: str | None = None, cache_dir: str | None = None
+    ):
         """Load the tokenizer files from the local cache, a directory, or Hugging Face."""
-        self._tokenizer = AutoTokenizer.from_pretrained(model_name, revision=revision)
+        self._tokenizer = AutoTokenizer.from_pretrained(
+            model_name, revision=revision, cache_dir=cache_dir
+        )
 
     def encode(self, text: str) -> list[int]:
         """Return token IDs so len(token_ids) gives the text's content token count.
@@ -25,6 +29,7 @@ class ModelTokenizer:
             text,
             add_special_tokens=False,
             truncation=False,
+            verbose=False,
         )
 
     def decode(self, token_ids: list[int]) -> str:
@@ -47,6 +52,7 @@ class ModelTokenizer:
             add_special_tokens=False,
             truncation=False,
             return_offsets_mapping=True,
+            verbose=False,
         )
         token_ids = tokenized_text["input_ids"]
         token_positions = tokenized_text["offset_mapping"]

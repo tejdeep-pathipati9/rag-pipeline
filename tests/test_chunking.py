@@ -1,39 +1,14 @@
 """Tests for token-bounded chunks that prefer paragraph and line boundaries.
 
 The convenience function and configured chunker objects share the same behavior.
-Chunk size and overlap are token counts. The word tokenizer below is only a
+Chunk size and overlap are token counts. The shared word tokenizer is only a
 predictable test substitute; the pipeline will use its embedding model's tokenizer.
 """
-
-import re
 
 import pytest
 
 from src.chunking.base import BaseChunker
 from src.chunking.recursive import RecursiveChunker, chunk_text
-
-
-class WordTokenizer:
-    """Treat each whitespace-separated word as one token for these offline tests."""
-
-    def encode(self, text):
-        """Return word tokens that are easy to count by hand."""
-        return text.split()
-
-    def decode(self, tokens):
-        """Turn the test tokens back into readable text."""
-        return " ".join(tokens)
-
-    def encode_with_offsets(self, text):
-        """Expose source positions using the same whitespace rule as encode()."""
-        matches = list(re.finditer(r"\S+", text))
-        return [match.group() for match in matches], [match.span() for match in matches]
-
-
-@pytest.fixture
-def tokenizer():
-    """Supply a tokenizer without downloading a model or calling an API."""
-    return WordTokenizer()
 
 
 @pytest.mark.parametrize("text", ["", "   \n\t"])
@@ -210,3 +185,15 @@ def test_invalid_strategy_boundary_is_rejected(tokenizer):
 
     with pytest.raises(ValueError, match="split position"):
         chunker.chunk_text("one two three")
+
+
+def test_source_positions_distinguish_repeated_passages(tokenizer):
+    """A repeated chunk must point to its own occurrence, not the first text match."""
+    text = "  same words\n\nsame words\n\nsame words  "
+    chunker = RecursiveChunker(tokenizer=tokenizer, chunk_size=2, overlap=0)
+
+    chunks = chunker.chunk_with_offsets(text)
+
+    assert [chunk.start for chunk in chunks] == [2, 14, 26]
+    assert [text[chunk.start : chunk.end] for chunk in chunks] == ["same words"] * 3
+    assert chunker.chunk_text(text) == [chunk.text for chunk in chunks]
