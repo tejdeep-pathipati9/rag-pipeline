@@ -40,8 +40,10 @@ def test_missing_index_reports_configuration_error(monkeypatch, tokenizer, capsy
     client.Index.assert_not_called()
 
 
+@pytest.mark.parametrize("generate", [False, True])
+@pytest.mark.parametrize("empty_results", [False, True])
 def test_question_command_runs_retrieval_without_preparing_or_upserting(
-    monkeypatch, tokenizer, capsys
+    monkeypatch, tokenizer, capsys, generate, empty_results
 ):
     """Retrieval queries existing records and never starts corpus ingestion."""
     model = SimpleNamespace(
@@ -55,7 +57,21 @@ def test_question_command_runs_retrieval_without_preparing_or_upserting(
     client.__enter__.return_value = client
     client.describe_index.return_value.to_dict.return_value = {"host": "https://test-index"}
     index = client.Index.return_value.__enter__.return_value
-    hits = [{"_id": "chunk-1", "rrf_score": 1 / 61, "body": "Hotel rules.", "section_ids": ["4.1"]}]
+    hits = [
+        {"_id": "chunk-1", "rrf_score": 1 / 61, "body": "Hotel rules.", "section_ids": ["4.1"]},
+        {"_id": "chunk-2", "rrf_score": 1 / 62, "body": "Overnight rules.", "section_ids": ["4.2"]},
+    ]
+    if empty_results:
+        hits = []
+    reranker = Mock()
+    reranker.predict.return_value = [0.1, 0.9]
+    load_reranker = Mock(return_value=reranker)
+    monkeypatch.setattr(cli, "CrossEncoder", load_reranker)
+    reranked_hits = (
+        []
+        if empty_results
+        else [{**hits[1], "rerank_score": 0.9}, {**hits[0], "rerank_score": 0.1}]
+    )
     monkeypatch.setattr(cli, "load_dotenv", Mock())
     monkeypatch.setattr(cli, "EmbeddingModel", Mock(return_value=model))
     prepare = Mock()
@@ -66,10 +82,20 @@ def test_question_command_runs_retrieval_without_preparing_or_upserting(
     monkeypatch.setattr(cli, "retrieve_hybrid", retrieve)
     monkeypatch.setattr(cli, "validate_index", Mock())
     monkeypatch.setattr(cli, "Pinecone", Mock(return_value=client))
+    foundry = MagicMock()
+    generation = Mock(return_value=SimpleNamespace(model_dump=lambda: {"summary": "Needs review."}))
+    monkeypatch.setattr(cli, "AnthropicFoundry", foundry)
+    monkeypatch.setattr(cli, "generate_answer", generation)
     monkeypatch.setenv("PINECONE_API_KEY", "test-key")
     monkeypatch.setenv("PINECONE_INDEX_NAME", "test-index")
+    monkeypatch.setenv("LLM_API_KEY", "test-llm-key")
+    monkeypatch.setenv("LLM_MODEL", "my-opus-deployment")
+    monkeypatch.setenv("LLM_BASE_URL", "https://example.services.ai.azure.com/anthropic")
 
-    cli.main(["--namespace", "recursive-test", "--question", "Hotel rules?"])
+    arguments = ["--namespace", "recursive-test", "--question", "Hotel rules?"]
+    if generate:
+        arguments.append("--generate")
+    cli.main(arguments)
 
     retrieve.assert_called_once_with("Hotel rules?", model, index, namespace="recursive-test")
     prepare.assert_not_called()
@@ -77,7 +103,23 @@ def test_question_command_runs_retrieval_without_preparing_or_upserting(
     output = json.loads(capsys.readouterr().out)
     assert output["top_k_per_method"] == 10
     assert output["retrieval_method"] == "hybrid"
-    assert output["matches"] == hits
+    assert output["matches"] == reranked_hits
+    assert output["reranker_model"] == cli.RERANKER_MODEL
+    assert output["reranker_revision"] == cli.RERANKER_REVISION
+    if empty_results:
+        load_reranker.assert_not_called()
+        reranker.predict.assert_not_called()
+    else:
+        load_reranker.assert_called_once()
+    if generate:
+        llm = foundry.return_value.__enter__.return_value
+        generation.assert_called_once_with(
+            "Hotel rules?", reranked_hits, llm, model="my-opus-deployment"
+        )
+        assert output["answer"] == {"summary": "Needs review."}
+    else:
+        generation.assert_not_called()
+        foundry.assert_not_called()
 
 
 def test_ingestion_dry_run_still_prepares_without_contacting_pinecone(
@@ -92,14 +134,37 @@ def test_ingestion_dry_run_still_prepares_without_contacting_pinecone(
         tokenizer=tokenizer,
     )
     pinecone = Mock()
+    reranker = Mock()
     monkeypatch.setattr(cli, "load_dotenv", Mock())
     monkeypatch.setattr(cli, "EmbeddingModel", Mock(return_value=model))
     monkeypatch.setattr(cli, "prepare_chunks", Mock(return_value=[]))
     monkeypatch.setattr(cli, "Pinecone", pinecone)
+    monkeypatch.setattr(cli, "CrossEncoder", reranker)
 
     cli.main(["--namespace", "test", "--dry-run"])
 
     pinecone.assert_not_called()
+    reranker.assert_not_called()
     output = json.loads(capsys.readouterr().out)
     assert output["dry_run"] is True
     assert output["upserted"] == 0
+
+
+def test_generation_requires_question_before_loading_model(monkeypatch):
+    load_model = Mock()
+    monkeypatch.setattr(cli, "EmbeddingModel", load_model)
+    with pytest.raises(SystemExit):
+        cli.main(["--namespace", "test", "--generate"])
+    load_model.assert_not_called()
+
+
+def test_missing_generation_configuration_fails_before_loading_model(monkeypatch, capsys):
+    load_model = Mock()
+    monkeypatch.setattr(cli, "load_dotenv", Mock())
+    monkeypatch.setattr(cli, "EmbeddingModel", load_model)
+    for field in ("LLM_API_KEY", "LLM_MODEL", "LLM_BASE_URL"):
+        monkeypatch.delenv(field, raising=False)
+    with pytest.raises(SystemExit):
+        cli.main(["--namespace", "test", "--question", "Hotel rules?", "--generate"])
+    assert "LLM_BASE_URL" in capsys.readouterr().err
+    load_model.assert_not_called()
