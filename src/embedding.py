@@ -35,14 +35,15 @@ class EmbeddingModel:
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
         """Return one vector per text, in the same order as the input list.
 
-        The caller supplies original chunk text only. Source metadata stays in
-        the prepared record. Reject oversized text before the model can truncate it.
+        Use original chunk text for ingestion and the question text for retrieval.
+        Source metadata stays in the record. Reject oversized text before the
+        model can truncate it.
         """
         if not texts:
             return []
         for text in texts:
             if len(self.tokenizer.encode(text)) > self.max_content_tokens:
-                raise ValueError("Chunk exceeds the embedding model's content token limit.")
+                raise ValueError("Text exceeds the embedding model's content token limit.")
 
         # Produce unit-length vectors. An empty prompt prevents a saved model
         # prompt from adding a prefix to the supplied chunk text.
