@@ -15,12 +15,13 @@ class ModelTokenizer:
         self, model_name: str, *, revision: str | None = None, cache_dir: str | None = None
     ):
         """Load the tokenizer files from the local cache, a directory, or Hugging Face."""
+        # The model name selects its vocabulary and rules; revision selects their version.
         self._tokenizer = AutoTokenizer.from_pretrained(
             model_name, revision=revision, cache_dir=cache_dir
         )
 
     def encode(self, text: str) -> list[int]:
-        """Return token IDs so len(token_ids) gives the text's content token count.
+        """Return vocabulary IDs so len(token_ids) gives the content token count.
 
         Exclude special tokens such as [CLS] and [SEP]. Keep the entire input,
         even when it is too long for the model, so the chunker can split it.
@@ -29,7 +30,7 @@ class ModelTokenizer:
             text,
             add_special_tokens=False,
             truncation=False,
-            verbose=False,
+            verbose=False,  # Long documents are expected here; we are counting, not embedding.
         )
 
     def decode(self, token_ids: list[int]) -> str:
@@ -46,7 +47,10 @@ class ModelTokenizer:
         For example, a token covering "Hotel" in "Hotel stay" has position (0, 5).
         text[0:5] retrieves "Hotel" directly from the original source. Hugging Face
         calls these positions "offsets" and returns them as "offset_mapping".
+        The end position is excluded, just like a normal Python string slice.
         """
+        # Calling the tokenizer object gives us a dictionary-like result with
+        # both IDs and positions; encode() alone would return only the IDs.
         tokenized_text = self._tokenizer(
             text,
             add_special_tokens=False,
@@ -56,4 +60,5 @@ class ModelTokenizer:
         )
         token_ids = tokenized_text["input_ids"]
         token_positions = tokenized_text["offset_mapping"]
+        # The lists line up: token_positions[i] locates token_ids[i] in the source.
         return token_ids, token_positions

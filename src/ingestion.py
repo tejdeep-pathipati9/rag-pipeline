@@ -9,6 +9,9 @@ def ingest_chunks(chunks, embeddings, index, *, namespace: str, batch_size: int 
     Each chunk already contains its ID, original body and source metadata.
     Only body is sent to the embedding model. Copying the chunk keeps its
     metadata intact and lets callers reuse it for another run.
+
+    A namespace separates one corpus/model/configuration from other experiments
+    in the same index. Reuse it when repeating that unchanged setup.
     """
     if not namespace.strip():
         raise ValueError("An explicit Pinecone namespace is required.")
@@ -28,6 +31,7 @@ def ingest_chunks(chunks, embeddings, index, *, namespace: str, batch_size: int 
         # Attach each vector to a copy of its original text and metadata.
         documents = []
         for chunk, vector in zip(batch, vectors, strict=True):
+            # Reject unusable vectors before submitting this batch to Pinecone.
             if len(vector) != embeddings.dimension or not all(
                 math.isfinite(value) for value in vector
             ):
@@ -40,6 +44,7 @@ def ingest_chunks(chunks, embeddings, index, *, namespace: str, batch_size: int 
             documents.append(document)
 
         # Existing IDs are overwritten, so repeating a run does not duplicate them.
+        # Acknowledgement confirms the write; fetch/search visibility can lag behind it.
         response = index.documents.upsert(namespace=namespace, documents=documents)
         if response.upserted_count != len(documents):
             raise RuntimeError("Pinecone did not acknowledge every chunk in the batch.")
@@ -49,7 +54,11 @@ def ingest_chunks(chunks, embeddings, index, *, namespace: str, batch_size: int 
 
 
 def validate_index(description: dict, embedding_dimension: int) -> None:
-    """Check that Pinecone can store the text and the model's vector dimension."""
+    """Check that Pinecone can store the text and the model's vector dimension.
+
+    In this document index, body and body_vector are declared schema fields.
+    Other uploaded fields, such as document_id and section_ids, are metadata.
+    """
     fields = description.get("schema", {}).get("fields", {})
     vector_field = fields.get("body_vector", {})
     if vector_field.get("type") != "dense_vector":

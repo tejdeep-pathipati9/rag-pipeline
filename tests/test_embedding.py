@@ -43,3 +43,13 @@ def test_empty_embedding_batch_skips_model_encoding(model):
     embedder, backend = model
     assert embedder.embed_documents([]) == []
     backend.encode.assert_not_called()
+
+
+@pytest.mark.parametrize("dimension", [None, 0, -1])
+def test_invalid_embedding_dimension_is_rejected(model, dimension):
+    """Reject a model without a usable dimension before passing it to Pinecone."""
+    embedder, backend = model
+    backend.get_embedding_dimension = lambda: dimension
+
+    with pytest.raises(ValueError, match="positive vector dimension"):
+        embedding.EmbeddingModel("test-model", revision="test-revision")

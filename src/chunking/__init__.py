@@ -7,8 +7,8 @@ Choose a concrete strategy, configure it once, then pass source text to it:
 
 BaseChunker handles validation, token limits, source slicing and overlap.
 Subclasses implement only their boundary-selection rule. This shared workflow
-is the Template Method pattern; choosing a concrete chunker uses the Strategy
-pattern. Tokenizer loading, embeddings and vector storage belong elsewhere.
+is the Template Method pattern: subclasses customize the boundary-selection
+step. Tokenizer loading, embeddings and vector storage belong elsewhere.
 
 The existing chunk_text() function remains a convenience for the baseline.
 """

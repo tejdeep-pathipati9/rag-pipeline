@@ -1,6 +1,9 @@
 """Check source metadata, stable IDs and citation mappings without external services."""
 
+from unittest.mock import Mock
+
 import pytest
+from markdown_it.token import Token
 
 from src.chunking import RecursiveChunker
 from src.documents import prepare_chunks
@@ -84,4 +87,17 @@ def test_symlinks_cannot_pull_non_corpus_files_into_index(corpus, tokenizer, tmp
     """The corpus allowlist also applies to the resolved file path."""
     (corpus / "external.md").symlink_to(tmp_path / "evaluation.md")
     with pytest.raises(ValueError, match="outside"):
+        prepare_chunks(corpus, RecursiveChunker(tokenizer, 100, 0))
+
+
+def test_missing_heading_positions_fail_before_citation_mapping(corpus, tokenizer, monkeypatch):
+    """A heading without a source range must not silently lose its citation mapping."""
+    parser = Mock()
+    parser.parse.return_value = [
+        Token("heading_open", "h2", 1),
+        Token("inline", "", 0, content="1. Eligibility"),
+    ]
+    monkeypatch.setattr("src.documents.MarkdownIt", lambda *args: parser)
+
+    with pytest.raises(ValueError, match="heading.*source line positions"):
         prepare_chunks(corpus, RecursiveChunker(tokenizer, 100, 0))

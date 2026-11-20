@@ -19,15 +19,23 @@ Keep credentials in the local `.env`. The pipeline is being built and reviewed o
 
 ## Ingestion
 
-Run from the repository root. Set `PINECONE_API_KEY` and `PINECONE_INDEX_NAME` in `.env`. The existing document index uses stored `body` text and a 384-dimensional `body_vector` field.
+Run from the repository root. Set `PINECONE_API_KEY` and `PINECONE_INDEX_NAME` in `.env`. The index must already exist in that API key's project, with stored `body` text and a 384-dimensional `body_vector` field.
+
+Preview chunk counts without writing to Pinecone:
 
 ```bash
-# Inspect chunk counts without writing to Pinecone.
 uv run python -m src --namespace recursive-original-minilm-v1 --dry-run
+```
 
-# Embed and index the corpus (200 content tokens, 40-token overlap).
+Embed and index the corpus with 200 content tokens and 40-token overlap:
+
+```bash
 uv run python -m src --namespace recursive-original-minilm-v1
+```
 
+Run the tests:
+
+```bash
 uv run pytest -q
 ```
 

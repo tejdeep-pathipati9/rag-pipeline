@@ -6,7 +6,11 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class TextChunk:
-    """Original text and its character range in the input passed to the chunker."""
+    """Original text and its character range in the input passed to the chunker.
+
+    input_text[start:end] reproduces text. end is excluded, as in Python slices.
+    These are character positions, independent of the model's token IDs.
+    """
 
     text: str
     start: int
@@ -71,6 +75,7 @@ class BaseChunker(ABC):
             next_start = self._choose_overlap_start(chunk_positions, len(chunk))
             next_text = remaining_text[next_start:]
             leading_whitespace = len(next_text) - len(next_text.lstrip())
+            # Advance past consumed text and any whitespace trimmed from the next start.
             source_start += next_start + leading_whitespace
             remaining_text = next_text.lstrip()
 

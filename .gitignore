@@ -229,7 +229,6 @@ __marimo__/
 artifacts/runs/
 .cache/
 
-# Keep evaluation local until the final project stage.
 /evaluation/
 
 # Markdown Files
