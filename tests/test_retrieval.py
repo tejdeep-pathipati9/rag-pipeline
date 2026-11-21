@@ -4,8 +4,9 @@ from types import SimpleNamespace
 from unittest.mock import Mock
 
 import pytest
+from sentence_transformers import CrossEncoder
 
-from src.retrieval import _fuse_results, retrieve_dense, retrieve_hybrid
+from src.retrieval import _fuse_results, rerank_results, retrieve_dense, retrieve_hybrid
 
 
 @pytest.fixture
@@ -149,3 +150,77 @@ def test_fusion_ties_have_a_deterministic_order():
     vector = [{"_id": "z", "_score": 0.9, "body": "Vector text."}]
     keyword = [{"_id": "a", "_score": 15.0, "body": "Keyword text."}]
     assert [hit["_id"] for hit in _fuse_results(vector, keyword)] == ["a", "z"]
+
+
+def test_reranker_scores_question_text_pairs_and_preserves_source_records():
+    """Only question/text pairs enter the model; all source and retrieval fields survive."""
+    chunks = [
+        {
+            "_id": "case",
+            "body": "A historical hotel example.",
+            "document_id": "CASE-1",
+            "document_type": "historical_case",
+            "section_ids": ["1", "1.1"],
+            "title": "Historical case",
+            "version": "1.0",
+            "effective_from": "2025-01-01",
+            "effective_to": "2025-12-31",
+            "status": "superseded",
+            "source_path": "corpus/cases/example.md",
+            "chunk_strategy": "recursive",
+            "rrf_score": 0.03,
+            "vector_rank": 1,
+            "vector_score": 0.9,
+        },
+        {
+            "_id": "policy",
+            "body": "The passenger care policy covers overnight stays.",
+            "document_id": "NS-CARE-2026",
+            "section_ids": ["4.1"],
+            "rrf_score": 0.02,
+            "keyword_rank": 2,
+            "keyword_score": 8.0,
+        },
+    ]
+    reranker = Mock(spec=CrossEncoder)
+    reranker.predict.return_value = [-2.0, 4.0]
+
+    results = rerank_results("Hotel rules?", chunks, reranker)
+
+    reranker.predict.assert_called_once_with(
+        [("Hotel rules?", chunk["body"]) for chunk in chunks], show_progress_bar=False
+    )
+    assert results == [
+        {**chunks[1], "rerank_score": 4.0},
+        {**chunks[0], "rerank_score": -2.0},
+    ]
+    assert all("rerank_score" not in chunk for chunk in chunks)
+
+
+def test_reranker_keeps_fused_order_when_scores_tie():
+    chunks = [{"_id": "z", "body": "First."}, {"_id": "a", "body": "Second."}]
+    reranker = Mock(spec=CrossEncoder)
+    reranker.predict.return_value = [0.5, 0.5]
+    assert [hit["_id"] for hit in rerank_results("Question?", chunks, reranker)] == ["z", "a"]
+
+
+def test_reranker_skips_model_when_no_candidates_were_retrieved():
+    reranker = Mock(spec=CrossEncoder)
+    assert rerank_results("Hotel rules?", [], reranker) == []
+    reranker.predict.assert_not_called()
+
+
+def test_reranker_rejects_blank_question_before_scoring():
+    reranker = Mock(spec=CrossEncoder)
+    with pytest.raises(ValueError, match="Question"):
+        rerank_results(" ", [{"_id": "a", "body": "Text."}], reranker)
+    reranker.predict.assert_not_called()
+
+
+@pytest.mark.parametrize("scores", [[], [0.5, 0.6], [float("nan")], [float("inf")]])
+def test_reranker_rejects_incomplete_or_nonfinite_scores(scores):
+    """A malformed model response must not silently drop chunks or corrupt ordering."""
+    reranker = Mock(spec=CrossEncoder)
+    reranker.predict.return_value = scores
+    with pytest.raises(ValueError, match="score"):
+        rerank_results("Hotel rules?", [{"_id": "a", "body": "Text."}], reranker)

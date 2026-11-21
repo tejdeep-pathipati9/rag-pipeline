@@ -1,10 +1,15 @@
-"""Combine ten vector and ten keyword candidates while preserving source metadata."""
+"""Retrieve vector/keyword candidates and rerank them without changing source records."""
+
+from math import isfinite
 
 from pinecone import DenseVectorQuery, TextQuery
+from sentence_transformers import CrossEncoder
 
 TOP_K = 10
 # Smooth rank contributions; this is separate from the number of candidates.
 RRF_K = 60
+RERANKER_MODEL = "cross-encoder/ms-marco-MiniLM-L6-v2"
+RERANKER_REVISION = "233902d25c440f23af6f7d6e94d2946bac0bee0a"
 
 
 def retrieve_dense(question: str, embeddings, index, *, namespace: str) -> list[dict]:
@@ -46,6 +51,33 @@ def retrieve_hybrid(question: str, embeddings, index, *, namespace: str) -> list
     )
     keyword_hits = _extract_hits(keyword_response)
     return _fuse_results(vector_hits, keyword_hits)
+
+
+def rerank_results(question: str, chunks: list[dict], reranker: CrossEncoder) -> list[dict]:
+    """Score each question/text pair, then return all candidates in descending order.
+
+    Load the cross-encoder once in the caller and reuse it. Scores measure model
+    relevance, not eligibility or probabilities. Metadata stays out of model input
+    but is preserved in the returned records, along with the original RRF scores.
+    """
+    if not question.strip():
+        raise ValueError("Question must not be empty.")
+    if not chunks:
+        return []
+
+    pairs = [(question, chunk["body"]) for chunk in chunks]
+    scores = [float(score) for score in reranker.predict(pairs, show_progress_bar=False)]
+    if len(scores) != len(chunks):
+        raise ValueError("Reranker must return one score per chunk.")
+    if not all(isfinite(score) for score in scores):
+        raise ValueError("Reranker scores must be finite.")
+
+    # Copy records so callers can still inspect the unchanged retrieval results.
+    results = [
+        {**chunk, "rerank_score": score} for chunk, score in zip(chunks, scores, strict=True)
+    ]
+    # Python's stable sort preserves fused order when model scores are equal.
+    return sorted(results, key=lambda hit: hit["rerank_score"], reverse=True)
 
 
 def _extract_hits(response) -> list[dict]:

@@ -4,7 +4,7 @@ A retrieval-augmented generation (RAG) project for missed-connection questions a
 
 ## Status
 
-The corpus, specifications, and project setup are merged. Recursive chunking, local MiniLM embeddings, Pinecone ingestion, and hybrid vector/keyword retrieval are implemented. Reranking and answer generation remain planned.
+The corpus, specifications, and project setup are merged. Recursive chunking, local MiniLM embeddings, Pinecone ingestion, hybrid retrieval, cross-encoder reranking, and Azure Foundry answer generation are implemented.
 
 ## Setup
 
@@ -53,9 +53,29 @@ uv run python -m src --namespace recursive-original-minilm-v1 --question "Am I e
 
 This retrieves up to **10 vector matches and 10 keyword matches** from the existing namespace. Vector search uses the configured MiniLM model; keyword search uses Pinecone's existing full-text `body` field with BM25 ranking.
 
-Reciprocal rank fusion combines the lists and removes duplicate chunk IDs, returning up to 20 unique candidates. Results preserve original text and source/citation metadata, with `rrf_score` for the combined order and `vector_score`/`keyword_score` plus ranks when that method found the chunk. This step does not run a learned reranker or generate an answer.
+Reciprocal rank fusion combines the lists and removes duplicate chunk IDs. A local `cross-encoder/ms-marco-MiniLM-L6-v2` then scores each question–chunk text pair and sorts all candidates by relevance. The first run downloads the pinned reranker into the model cache; no extra dependency or API key is needed.
+
+Results keep up to 20 unique chunks, preserving original text and source/citation metadata. Each has a `rerank_score`, the earlier `rrf_score`, and `vector_score`/`keyword_score` plus ranks when that method found the chunk. Equal reranker scores retain the fused order. Scores indicate relevance, not eligibility or confidence; reranking cannot recover evidence missed by both searches. Use `--generate` to turn the reranked evidence into an answer.
 
 Use the same model, revision, and namespace as ingestion. The original namespace still contains the intentionally stale policy metadata; retrieval preserves it for the later debugging exercise.
+
+## Answer generation
+
+Configure your Azure Foundry deployment in the local `.env`:
+
+- `LLM_API_KEY`: the Foundry resource key.
+- `LLM_BASE_URL`: the Claude Messages endpoint, such as `https://your-resource.services.ai.azure.com/anthropic`.
+- `LLM_MODEL`: your exact deployment name for the Opus model.
+
+Generate an answer from the reranked hybrid retrieval results:
+
+```bash
+uv run python -m src --namespace recursive-original-minilm-v1 --question "For FR-214 on 2026-10-14, what are my rebooking, hotel, and refund options?" --generate
+```
+
+The output includes a summary and separate rebooking, hotel, and refund decisions, each with an explanation, citations, and missing facts. Citations use `DOCUMENT_ID#SECTION_ID` and are checked against the retrieved chunks. Missing evidence produces `NEEDS_REVIEW`; response validation checks structure and citation references, not the factual correctness of every explanation.
+
+Generation uses the configured Azure API and is opt-in. Omitting `--generate` runs retrieval only. API keys, independent rule specifications, and evaluation labels are never included in the generation prompt.
 
 ## Project data
 
