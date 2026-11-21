@@ -79,4 +79,4 @@ Retain the affected ticket and flight IDs, original and revised itinerary, appro
 | `MECHANICAL` | Yes | No | Not eligible |
 
 ## 6. Historical use and related records
-This edition may be needed to explain a historical 2025 decision such as **CASE-CREW-2025**. Historical case comparison must use the version effective when the historical travel occurred. Questions about travel in 2026 must instead use the applicable later policy. This edition is retained for historical audit, training, and document-version exercises; it should not replace official federal refund guidance.
+This edition may be needed to explain a historical 2025 accommodation decision. Historical case comparison must use the version effective when the historical travel occurred. Questions about travel in 2026 must instead use the applicable later policy. This edition is retained for historical audit, training, and document-version exercises; it should not replace official federal refund guidance.
