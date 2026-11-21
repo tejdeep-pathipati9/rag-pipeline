@@ -1,0 +1,173 @@
+{
+  "description": "Actual live code-search diagnostic on the revised corpus; ranking before parent expansion.",
+  "namespace": "policy-qa-compact-parent-child-v1",
+  "question": "What does NO_CURRENT_INVENTORY mean for my rebooking?",
+  "expected_section": "NS-CONN-2026#2.5",
+  "top_k": 5,
+  "dense": [
+    {
+      "_id": "aed190307ccc569fa581ccfe8b8b810b735c74f08a9e9f250ab62e001b41472e",
+      "body": "## 2. Rebooking or refund\nExplain both options when a qualifying disruption occurs. A replacement offer must not be presented as the passenger's only remedy.\n\n### 2.1 No-additional-fare rebooking\nNS-CONN-2026 may provide alternative travel for weather or airline-controlled disruptions. An offer, acceptance and completed travel are different states. Accepting an offer does not establish that the passenger actually flew.\n\n### 2.2 Refund instead of alternative travel\nA cancellation or significant itinerary change can qualify for a refund when the passenger declines the changed itinerary and does not accept replacement travel, credit or other compensation. Rejecting an eligible rebooking does not forfeit an otherwise qualifying refund. Check unused transportation separately from the entire ticket value.\n\n",
+      "document_id": "NS-REF-2026",
+      "section_ids": [
+        "2",
+        "2.1",
+        "2.2"
+      ],
+      "source_path": "corpus/policies/03_refund_policy_2026.md",
+      "source_checksum": "381046f7b03d3dd44685603fb70d19a6db14a3f605fc1300802f5297122e2683",
+      "start_char": 862.0,
+      "end_char": 1674.0,
+      "rerank_score": -1.6941263675689697
+    },
+    {
+      "_id": "83ffc5438a5e21d4a7fc41dd98680ff9bf8676a8140ee5a67dc09bed3bceff38",
+      "body": "### 2.6 Changed routing\nA different airport, additional connection or substantial arrival change may affect refund eligibility. Check accessibility needs before presenting a routing as suitable. Fare price alone does not establish suitability.\n\n### 2.7 Required information\nRecord the original ticket, affected segments, boarding and arrival times, available alternatives, passenger choice and applicable policy version. An unresolved cause does not prevent protected rebooking; cause matters separately for passenger care.\n\n### 2.8 Conflicting messages\nA gate agent, app and phone agent may show different inventory snapshots. Identify the current offer and whether a ticket exists. Multiple messages are not multiple confirmed bookings. Tell the passenger which offer replaced an earlier proposal.\n\n",
+      "document_id": "NS-CONN-2026",
+      "section_ids": [
+        "2.6",
+        "2.7",
+        "2.8"
+      ],
+      "source_path": "corpus/policies/01_connection_protection_2026.md",
+      "source_checksum": "5e2b5ec0ca31de04d6b0e5e96d1229daddfbb9c0d4f69543df64c2c1b42319e2",
+      "start_char": 2931.0,
+      "end_char": 3732.0,
+      "rerank_score": -2.9983458518981934
+    },
+    {
+      "_id": "c6d2777772d3330c3e8f44c83d321c620a92c06e9300cafc2233637a27f07022",
+      "body": "## 2. Rebooking and passenger choice\nRebooking eligibility, an available offer and a confirmed ticket are different stages. Staff must explain which stage has actually been reached.\n\n### 2.1 No-additional-fare rebooking\nFor a verified protected missed connection, Northstar offers the earliest available Northstar-operated itinerary to the original destination at no additional fare. This applies to weather and other uncontrollable causes as well as mechanical, crew and airline-operations disruptions. Seat availability must be confirmed; no particular departure time is guaranteed.\n\n### 2.2 Available alternatives\nSearch feasible same-day service, later connections and then next-day travel, considering the passenger's documented needs. A search result or temporary seat hold is not a confirmed reservation. External-carrier transfers require separate approval.\n\n",
+      "document_id": "NS-CONN-2026",
+      "section_ids": [
+        "2",
+        "2.1",
+        "2.2"
+      ],
+      "source_path": "corpus/policies/01_connection_protection_2026.md",
+      "source_checksum": "5e2b5ec0ca31de04d6b0e5e96d1229daddfbb9c0d4f69543df64c2c1b42319e2",
+      "start_char": 1193.0,
+      "end_char": 2060.0,
+      "rerank_score": -3.0136003494262695
+    },
+    {
+      "_id": "dd0d5bc27aeced8230ad19bed3a8ed2ef0fbfc6744819e6297d8ff936560027f",
+      "body": "## 6. Scope examples\nA weather-delayed passenger on one protected Northstar ticket may qualify for no-additional-fare rebooking. A traveler on two separately purchased tickets is outside protected-connection coverage and needs specialist review. Neither example alone determines hotel or refund eligibility.\n",
+      "document_id": "NS-CONN-2026",
+      "section_ids": [
+        "6"
+      ],
+      "source_path": "corpus/policies/01_connection_protection_2026.md",
+      "source_checksum": "5e2b5ec0ca31de04d6b0e5e96d1229daddfbb9c0d4f69543df64c2c1b42319e2",
+      "start_char": 4397.0,
+      "end_char": 4705.0,
+      "rerank_score": -3.2116217613220215
+    },
+    {
+      "_id": "6d91243741178ea6e9a2ce8a0d6a58ed252bb208bdb31f228b2a27f54d10eac9",
+      "body": "## 4. Passenger care\nA free rebooking does not automatically include meals or a hotel. Assess approved cause, waiting time, overnight necessity and residence under NS-CARE-2026.\n\n",
+      "document_id": "NS-CONN-2026",
+      "section_ids": [
+        "4"
+      ],
+      "source_path": "corpus/policies/01_connection_protection_2026.md",
+      "source_checksum": "5e2b5ec0ca31de04d6b0e5e96d1229daddfbb9c0d4f69543df64c2c1b42319e2",
+      "start_char": 4004.0,
+      "end_char": 4183.0,
+      "rerank_score": -4.578892707824707
+    }
+  ],
+  "hybrid": [
+    {
+      "_id": "6108bec69dd33abee9d2ea0c5d1a6ed39d404be53e115b994797fca5c3a23481",
+      "body": "### 2.3 Passenger decision\nRecord an offer as OFFERED, ACCEPTED, DECLINED or EXPIRED, including its timestamp and notification channel. Expiry or silence does not prove acceptance. A passenger may decline an alternative without losing an otherwise qualifying refund option.\n\n### 2.4 Boarding feasibility\nAn aircraft still at the gate may already be closed for boarding. Use recorded boarding events and realistic transfer constraints, rather than scheduled departure alone. Escalate conflicting timestamps instead of guessing.\n\n### 2.5 Offer versus confirmed booking\nA text offering another flight does not mean the passenger is booked. Distinguish SEARCHED, OFFERED, ACCEPTED, TICKETED and FLOWN. Confirmation requires an actual ticketed reservation. If no seats are available, record NO_CURRENT_INVENTORY: recovery eligibility remains, but transport is not confirmed.\n\n",
+      "document_id": "NS-CONN-2026",
+      "section_ids": [
+        "2.3",
+        "2.4",
+        "2.5"
+      ],
+      "source_path": "corpus/policies/01_connection_protection_2026.md",
+      "source_checksum": "5e2b5ec0ca31de04d6b0e5e96d1229daddfbb9c0d4f69543df64c2c1b42319e2",
+      "start_char": 2060.0,
+      "end_char": 2931.0,
+      "keyword_rank": 1,
+      "keyword_score": 10.051562,
+      "rrf_score": 0.01639344262295082,
+      "rerank_score": -1.221651554107666
+    },
+    {
+      "_id": "aed190307ccc569fa581ccfe8b8b810b735c74f08a9e9f250ab62e001b41472e",
+      "body": "## 2. Rebooking or refund\nExplain both options when a qualifying disruption occurs. A replacement offer must not be presented as the passenger's only remedy.\n\n### 2.1 No-additional-fare rebooking\nNS-CONN-2026 may provide alternative travel for weather or airline-controlled disruptions. An offer, acceptance and completed travel are different states. Accepting an offer does not establish that the passenger actually flew.\n\n### 2.2 Refund instead of alternative travel\nA cancellation or significant itinerary change can qualify for a refund when the passenger declines the changed itinerary and does not accept replacement travel, credit or other compensation. Rejecting an eligible rebooking does not forfeit an otherwise qualifying refund. Check unused transportation separately from the entire ticket value.\n\n",
+      "document_id": "NS-REF-2026",
+      "section_ids": [
+        "2",
+        "2.1",
+        "2.2"
+      ],
+      "source_path": "corpus/policies/03_refund_policy_2026.md",
+      "source_checksum": "381046f7b03d3dd44685603fb70d19a6db14a3f605fc1300802f5297122e2683",
+      "start_char": 862.0,
+      "end_char": 1674.0,
+      "vector_rank": 2,
+      "keyword_rank": 4,
+      "vector_score": 0.3673525,
+      "keyword_score": 3.3009493,
+      "rrf_score": 0.031754032258064516,
+      "rerank_score": -1.6941263675689697
+    },
+    {
+      "_id": "83ffc5438a5e21d4a7fc41dd98680ff9bf8676a8140ee5a67dc09bed3bceff38",
+      "body": "### 2.6 Changed routing\nA different airport, additional connection or substantial arrival change may affect refund eligibility. Check accessibility needs before presenting a routing as suitable. Fare price alone does not establish suitability.\n\n### 2.7 Required information\nRecord the original ticket, affected segments, boarding and arrival times, available alternatives, passenger choice and applicable policy version. An unresolved cause does not prevent protected rebooking; cause matters separately for passenger care.\n\n### 2.8 Conflicting messages\nA gate agent, app and phone agent may show different inventory snapshots. Identify the current offer and whether a ticket exists. Multiple messages are not multiple confirmed bookings. Tell the passenger which offer replaced an earlier proposal.\n\n",
+      "document_id": "NS-CONN-2026",
+      "section_ids": [
+        "2.6",
+        "2.7",
+        "2.8"
+      ],
+      "source_path": "corpus/policies/01_connection_protection_2026.md",
+      "source_checksum": "5e2b5ec0ca31de04d6b0e5e96d1229daddfbb9c0d4f69543df64c2c1b42319e2",
+      "start_char": 2931.0,
+      "end_char": 3732.0,
+      "vector_rank": 5,
+      "vector_score": 0.30877173,
+      "rrf_score": 0.015384615384615385,
+      "rerank_score": -2.9983458518981934
+    },
+    {
+      "_id": "c6d2777772d3330c3e8f44c83d321c620a92c06e9300cafc2233637a27f07022",
+      "body": "## 2. Rebooking and passenger choice\nRebooking eligibility, an available offer and a confirmed ticket are different stages. Staff must explain which stage has actually been reached.\n\n### 2.1 No-additional-fare rebooking\nFor a verified protected missed connection, Northstar offers the earliest available Northstar-operated itinerary to the original destination at no additional fare. This applies to weather and other uncontrollable causes as well as mechanical, crew and airline-operations disruptions. Seat availability must be confirmed; no particular departure time is guaranteed.\n\n### 2.2 Available alternatives\nSearch feasible same-day service, later connections and then next-day travel, considering the passenger's documented needs. A search result or temporary seat hold is not a confirmed reservation. External-carrier transfers require separate approval.\n\n",
+      "document_id": "NS-CONN-2026",
+      "section_ids": [
+        "2",
+        "2.1",
+        "2.2"
+      ],
+      "source_path": "corpus/policies/01_connection_protection_2026.md",
+      "source_checksum": "5e2b5ec0ca31de04d6b0e5e96d1229daddfbb9c0d4f69543df64c2c1b42319e2",
+      "start_char": 1193.0,
+      "end_char": 2060.0,
+      "vector_rank": 4,
+      "vector_score": 0.33298802,
+      "rrf_score": 0.015625,
+      "rerank_score": -3.0136003494262695
+    },
+    {
+      "_id": "dd0d5bc27aeced8230ad19bed3a8ed2ef0fbfc6744819e6297d8ff936560027f",
+      "body": "## 6. Scope examples\nA weather-delayed passenger on one protected Northstar ticket may qualify for no-additional-fare rebooking. A traveler on two separately purchased tickets is outside protected-connection coverage and needs specialist review. Neither example alone determines hotel or refund eligibility.\n",
+      "document_id": "NS-CONN-2026",
+      "section_ids": [
+        "6"
+      ],
+      "source_path": "corpus/policies/01_connection_protection_2026.md",
+      "source_checksum": "5e2b5ec0ca31de04d6b0e5e96d1229daddfbb9c0d4f69543df64c2c1b42319e2",
+      "start_char": 4397.0,
+      "end_char": 4705.0,
+      "vector_rank": 3,
+      "vector_score": 0.3382768,
+      "rrf_score": 0.015873015873015872,
+      "rerank_score": -3.2116217613220215
+    }
+  ],
+  "parent_expansion_recovers_target_in_both": true
+}

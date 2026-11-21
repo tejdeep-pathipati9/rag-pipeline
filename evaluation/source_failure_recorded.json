@@ -1,0 +1,1452 @@
+{
+  "description": "Actual live stale-export failure and source-only repair on compact policy documents.",
+  "model": "claude-opus-5",
+  "manifest": {
+    "scenario": "A stale export republishes the 2025 crew-hotel exclusion as current 2026 policy.",
+    "distinction": "Controlled stale-export demonstration using the compact sources. The original status-only probes were a separate earlier experiment.",
+    "scope": "Four 500-800 word current-labelled policy documents in each export; only hotel-rule source text is repaired.",
+    "fault": "Care sections 4.1 and 4.5 incorrectly carry forward the 2025 crew exclusion under current identity and effective date.",
+    "legacy_rule_source": "corpus/policies/05_passenger_care_2025.md#3.2",
+    "correct_rule_source": "corpus/policies/02_passenger_care_2026.md#4.5",
+    "broken_sha256": "980bdfb430b46f47313328e1993f76231f2ffa467586e029ab083df3fb34d51d",
+    "corrected_sha256": "6409ef98d4330b1935632fc22f0fd9eb5f25dae1a81bc1c440fe4a88f44f4b68",
+    "production_source_sha256": "6409ef98d4330b1935632fc22f0fd9eb5f25dae1a81bc1c440fe4a88f44f4b68",
+    "prompt_sha256": "5f27254b669264939c0c597b9337d19d06febf8a4b7099c38ca702904f03ef06",
+    "question": "Northstar has finalized my missed-connection delay as a crew scheduling problem. I have a valid Northstar itinerary, no onward flight is available until tomorrow, and I'm away from home. Is the hotel a standard benefit or only a courtesy?",
+    "as_of_date": "2026-11-20",
+    "top_k": 20,
+    "chunk_size": 200,
+    "overlap": 40,
+    "context_budget": 4000
+  },
+  "broken_care_source": "---\ndocument_id: \"NS-CARE-2026\"\ntitle: \"Passenger Care, Meal Assistance and Overnight Accommodation\"\ndocument_type: \"policy\"\nversion: \"2.1\"\neffective_from: \"2026-01-01\"\nstatus: \"current\"\nowner: \"Customer Experience Operations\"\nsource_kind: \"synthetic\"\nfictional_airline: \"Northstar Air\"\n---\n\n# Meals and Overnight Hotels \u2014 NS-CARE-2026\n\nEffective January 1, 2026. Owner: Customer Experience Operations. These are fictional Northstar Air service commitments for disrupted domestic travel, not universal legal rights. Assess meals, hotels, rebooking and refunds separately.\n\n## 1. Coverage and definitions\nUse the policy effective on the disruption date. A passenger asking about today's benefits should receive the current rule, while a historical claim uses the edition in force at that time.\n\n### 1.1 Covered passengers\nThe passenger must hold a valid disrupted Northstar itinerary and be present at the affected airport. Protected rebooking is governed separately by NS-CONN-2026.\n\n### 1.2 Airline-controlled causes and home metro\nMECHANICAL, CREW_OPERATIONAL and AIRLINE_OPERATIONS are airline-controlled causes. WEATHER and ATC_EXTERNAL are uncontrollable. UNKNOWN and MIXED_PENDING are unresolved. Home metro means the passenger's verified metropolitan area of residence, not their payment address or departure airport.\n\n## 2. Basic assistance\nExplain the flight status, feasible recovery options and any information still needed. Discretionary assistance must be recorded as COURTESY rather than a standard entitlement. A service offer does not certify that it was delivered.\n\n## 3. Meal vouchers\nMeal eligibility depends on the waiting time and approved cause, independently of hotel eligibility.\n\n### 3.1 Three-hour waiting threshold\nProvide a meal voucher after at least three consecutive hours of waiting for onward travel due to a final approved airline-controlled cause. Mechanical, crew and airline-operations disruptions can qualify. Do not count the same waiting interval twice when offers change.\n\n### 3.2 Meal exclusions\nWeather-only and external air-traffic-control delays do not qualify for standard meal vouchers. If the cause is unconfirmed, meal eligibility requires review. Staff may separately authorize courtesy assistance.\n\n## 4. Overnight accommodation\nDetermine eligibility before arranging or reimbursing a room. An overnight delay alone is insufficient.\n\n### 4.1 Primary hotel eligibility\nNorthstar provides an approved hotel when all four conditions hold: a valid disrupted Northstar itinerary; a final approved MECHANICAL or AIRLINE_OPERATIONS cause; onward travel requiring an overnight wait at the affected airport; and a passenger away from their verified home metro area. All conditions are required together.\n\n### 4.2 Overnight necessity\nAn overnight wait means no reasonable onward option can be completed without staying at the recovery station into the following calendar day. Use feasible flight options and boarding constraints. A late departure or device date change alone does not establish overnight necessity.\n\n### 4.3 Home-city restriction\nA passenger stranded at an airport within their own home metro area is not eligible for the standard hotel. This applies even if their trip began elsewhere. Missing residence information requires review.\n\n### 4.4 Weather, external ATC and unresolved causes\nWeather and external ATC disruptions do not qualify for standard hotel coverage. UNKNOWN, MIXED_PENDING or an investigation still in progress means NEEDS_REVIEW; do not promise payment or assume the cause is uncontrollable.\n\n### 4.5 Crew scheduling coverage\nA finalized CREW_OPERATIONAL disruption is excluded from the standard hotel commitment. Crew shortages and rotation problems do not qualify for a routine hotel in this edition, even when airline-controlled. A duty manager may authorize a COURTESY booking, but it is not a standard benefit. Mechanical and airline-operations disruptions can qualify when the overnight, away-from-home and valid-itinerary conditions in \u00a74.1 hold.\n\n### 4.6 Self-booked hotels and written authorization\nNorthstar normally issues an approved hotel voucher. Before booking independently, obtain written authorization stating the maximum reimbursable rate and approved dates. A receipt or verbal suggestion alone does not establish reimbursement approval.\n\n### 4.7 Approved cause controls\nThe latest authorized, approved final investigation controls eligibility, even if a gate announcement initially said weather. A later unapproved draft cannot override an approved finding. Consult NS-CAUSE-2026 for investigation states.\n\n### 4.8 Eligibility versus fulfillment\nFull partner hotels do not remove eligibility. Record fulfillment separately as NOT_REQUESTED, SEARCHING, VOUCHER_AUTHORIZED, VOUCHER_ISSUED, RECEIPT_PENDING or CLOSED. Authorization is not proof of an issued voucher or booked room. Arrange alternative approved accommodation or escalate capacity problems.\n\n### 4.9 Residence verification\nDo not substitute billing address, nationality, telephone area code or trip origin for verified residence. Conflicting residence sources require authorized verification before deciding the home-metro condition.\n\n## 5. Review and communication\nExplain which eligibility conditions hold and which facts are missing. Escalate accessibility or safety needs to trained staff. Never state that a room is reserved, an expense reimbursed or a benefit delivered without fulfillment evidence. Refund options remain governed by NS-REF-2026.\n",
+  "corrected_sources": {
+    "corpus/policies/01_connection_protection_2026.md": "---\ndocument_id: \"NS-CONN-2026\"\ntitle: \"Connection Protection and Involuntary Rebooking Standard\"\ndocument_type: \"policy\"\nversion: \"2.0\"\neffective_from: \"2026-01-01\"\nstatus: \"current\"\nowner: \"Customer Operations\"\nsource_kind: \"synthetic\"\nfictional_airline: \"Northstar Air\"\n---\n\n# Connection Protection and Rebooking \u2014 NS-CONN-2026\n\nEffective January 1, 2026. Owner: Customer Operations. This fictional Northstar Air policy covers domestic protected connections. It describes recovery eligibility; an eligible passenger still needs a confirmed seat before travel is arranged.\n\n## 1. Protected connections\nA missed connection and a refund are separate decisions. Use this policy for replacement travel and NS-REF-2026 for refunds. Hotel assistance is assessed separately under NS-CARE-2026.\n\n### 1.1 Covered transportation\nA protected itinerary has at least two domestic Northstar-operated flights on the same ticket and reservation, sold as one continuous journey. The first flight must be disrupted before the onward flight's boarding cutoff. Separate tickets, codeshares, interline travel and international itineraries are outside this policy; refer those passengers to a specialist.\n\n### 1.2 Confirming a missed connection\nCompare actual inbound gate arrival, required transfer time and the onward boarding cutoff. A delayed inbound flight does not prove a missed connection if onward boarding remains open. Missing or contradictory operational times require review.\n\n## 2. Rebooking and passenger choice\nRebooking eligibility, an available offer and a confirmed ticket are different stages. Staff must explain which stage has actually been reached.\n\n### 2.1 No-additional-fare rebooking\nFor a verified protected missed connection, Northstar offers the earliest available Northstar-operated itinerary to the original destination at no additional fare. This applies to weather and other uncontrollable causes as well as mechanical, crew and airline-operations disruptions. Seat availability must be confirmed; no particular departure time is guaranteed.\n\n### 2.2 Available alternatives\nSearch feasible same-day service, later connections and then next-day travel, considering the passenger's documented needs. A search result or temporary seat hold is not a confirmed reservation. External-carrier transfers require separate approval.\n\n### 2.3 Passenger decision\nRecord an offer as OFFERED, ACCEPTED, DECLINED or EXPIRED, including its timestamp and notification channel. Expiry or silence does not prove acceptance. A passenger may decline an alternative without losing an otherwise qualifying refund option.\n\n### 2.4 Boarding feasibility\nAn aircraft still at the gate may already be closed for boarding. Use recorded boarding events and realistic transfer constraints, rather than scheduled departure alone. Escalate conflicting timestamps instead of guessing.\n\n### 2.5 Offer versus confirmed booking\nA text offering another flight does not mean the passenger is booked. Distinguish SEARCHED, OFFERED, ACCEPTED, TICKETED and FLOWN. Confirmation requires an actual ticketed reservation. If no seats are available, record NO_CURRENT_INVENTORY: recovery eligibility remains, but transport is not confirmed.\n\n### 2.6 Changed routing\nA different airport, additional connection or substantial arrival change may affect refund eligibility. Check accessibility needs before presenting a routing as suitable. Fare price alone does not establish suitability.\n\n### 2.7 Required information\nRecord the original ticket, affected segments, boarding and arrival times, available alternatives, passenger choice and applicable policy version. An unresolved cause does not prevent protected rebooking; cause matters separately for passenger care.\n\n### 2.8 Conflicting messages\nA gate agent, app and phone agent may show different inventory snapshots. Identify the current offer and whether a ticket exists. Multiple messages are not multiple confirmed bookings. Tell the passenger which offer replaced an earlier proposal.\n\n## 3. Refund alternative\nA missed connection does not automatically create a refund. Check cancellation or significant itinerary change and the passenger's decision under NS-REF-2026. Completed replacement travel generally prevents a full refund for transportation used.\n\n## 4. Passenger care\nA free rebooking does not automatically include meals or a hotel. Assess approved cause, waiting time, overnight necessity and residence under NS-CARE-2026.\n\n## 5. Escalation\nWhen boarding evidence, ticket linkage or inventory is missing, explain what needs verification. Never claim that a flight has been booked or that compensation has been paid without confirmation.\n\n## 6. Scope examples\nA weather-delayed passenger on one protected Northstar ticket may qualify for no-additional-fare rebooking. A traveler on two separately purchased tickets is outside protected-connection coverage and needs specialist review. Neither example alone determines hotel or refund eligibility.\n",
+    "corpus/policies/03_refund_policy_2026.md": "---\ndocument_id: \"NS-REF-2026\"\ntitle: \"Flight Disruption Refund Eligibility and Passenger Choice\"\ndocument_type: \"policy\"\nversion: \"2.0\"\neffective_from: \"2026-01-01\"\nstatus: \"current\"\nowner: \"Ticketing Compliance\"\nsource_kind: \"synthetic\"\nfictional_airline: \"Northstar Air\"\n---\n\n# Disruption Refunds and Passenger Choice \u2014 NS-REF-2026\n\nEffective January 1, 2026. Owner: Ticketing Compliance. This fictional Northstar Air policy describes domestic disruption refunds. It does not replace applicable law or establish another airline's obligations. Rebooking and passenger-care benefits are separate decisions.\n\n## 1. Scope and required information\nA missed connection does not automatically create a refund entitlement. Assess the change to the whole journey, passenger choice and transportation already used.\n\n### 1.1 Evidence required\nObtain original and replacement final-destination arrival times, cancellation status, ticket coupon usage and the passenger's response to alternatives. A missed connection alone does not prove a significant change or a decision to decline travel. Missing facts should be identified rather than invented.\n\n## 2. Rebooking or refund\nExplain both options when a qualifying disruption occurs. A replacement offer must not be presented as the passenger's only remedy.\n\n### 2.1 No-additional-fare rebooking\nNS-CONN-2026 may provide alternative travel for weather or airline-controlled disruptions. An offer, acceptance and completed travel are different states. Accepting an offer does not establish that the passenger actually flew.\n\n### 2.2 Refund instead of alternative travel\nA cancellation or significant itinerary change can qualify for a refund when the passenger declines the changed itinerary and does not accept replacement travel, credit or other compensation. Rejecting an eligible rebooking does not forfeit an otherwise qualifying refund. Check unused transportation separately from the entire ticket value.\n\n## 3. Qualifying disruption and passenger decision\nThe approved cause does not determine whether a cancellation or significant itinerary change qualifies. Weather-related changes can qualify just as airline-controlled changes can.\n\n### 3.1 Cancellation\nA canceled covered flight qualifies for assessment when the passenger declines substitute travel. Do not treat an ordinary delay as a cancellation. Verify the carrier's actual flight status.\n\n### 3.2 Domestic significant-change threshold\nA replacement scheduled to arrive at the final destination at least three hours later than originally scheduled meets the domestic arrival-change threshold. Departure at least three hours earlier can also qualify. Compare timezone-aware scheduled timestamps from the original ticket and replacement offer.\n\n### 3.3 Passenger choice\nRecord whether the passenger requested a refund, declined replacement travel, accepted a credit or traveled. An unanswered offer does not prove acceptance or rejection. Verify delivery and expiry before deciding what response occurred.\n\n### 3.4 Replacement flight already used\nA passenger who flew the replacement generally cannot obtain a full refund for transportation already used under this disruption remedy. Arrival five hours late does not change that rule. Separate remedies for unused travel, downgrade or optional-service fees may still apply.\n\n### 3.5 Final destination, not first-leg delay\nA first flight arriving four hours late does not by itself establish the final-arrival change. A later connection may reduce the difference; a short inbound delay can also cause an overnight arrival change. Without replacement final-arrival information, the significant-change test remains unresolved.\n\n### 3.6 Offer status\nCREATED, DELIVERED, VIEWED, ACCEPTED, DECLINED, EXPIRED and FLOWN describe different events. DELIVERED means a notification reached the passenger's channel, not that they accepted travel. An internally generated voucher or offer does not close a refund request.\n\n### 3.7 Partly used tickets\nIf the passenger flew the first segment but declines qualifying onward travel, assess the unused ticket portion using coupon accounting. Do not promise the entire fare or calculate a dollar amount without ticket-value records. Eligibility and refund amount are separate questions.\n\n### 3.8 Other significant changes\nA changed airport, additional connection or qualifying cabin downgrade may matter even when the arrival difference is under three hours. Compare the original and replacement itineraries before deciding. Duration is not the only qualifying criterion.\n\n## 4. Amount and processing\nAn eligibility decision does not establish that payment has been made. Explain any missing accounting or payment information.\n\n### 4.1 Unused value\nAn entirely unused qualifying ticket may receive a full refund. For partly used tickets, calculate unused transportation and eligible fees from accounting records. Do not estimate value from distance or delay length.\n\n### 4.2 Payment method and timing\nReturn eligible refunds to the original payment method. Northstar's processing targets are seven business days for credit-card payments and twenty calendar days for other methods after the verified trigger. Missing payment method or trigger date prevents a promised completion date.\n\n## 5. Examples and exceptions\nA passenger who declines a replacement arriving twenty hours late may qualify whether the original disruption was mechanical or weather-related. A passenger who flies that replacement generally cannot obtain a full used-ticket refund under the change remedy. A missed connection alone remains insufficient to decide.\n\n## 6. Escalation\nWhen ticket usage, passenger choice or timestamps conflict, explain what must be verified. Seek compliance review for any conflict with applicable law; never substitute a historical courtesy payment for a governing refund rule.\n",
+    "corpus/policies/02_passenger_care_2026.md": "---\ndocument_id: \"NS-CARE-2026\"\ntitle: \"Passenger Care, Meal Assistance and Overnight Accommodation\"\ndocument_type: \"policy\"\nversion: \"2.1\"\neffective_from: \"2026-01-01\"\nstatus: \"current\"\nowner: \"Customer Experience Operations\"\nsource_kind: \"synthetic\"\nfictional_airline: \"Northstar Air\"\n---\n\n# Meals and Overnight Hotels \u2014 NS-CARE-2026\n\nEffective January 1, 2026. Owner: Customer Experience Operations. These are fictional Northstar Air service commitments for disrupted domestic travel, not universal legal rights. Assess meals, hotels, rebooking and refunds separately.\n\n## 1. Coverage and definitions\nUse the policy effective on the disruption date. A passenger asking about today's benefits should receive the current rule, while a historical claim uses the edition in force at that time.\n\n### 1.1 Covered passengers\nThe passenger must hold a valid disrupted Northstar itinerary and be present at the affected airport. Protected rebooking is governed separately by NS-CONN-2026.\n\n### 1.2 Airline-controlled causes and home metro\nMECHANICAL, CREW_OPERATIONAL and AIRLINE_OPERATIONS are airline-controlled causes. WEATHER and ATC_EXTERNAL are uncontrollable. UNKNOWN and MIXED_PENDING are unresolved. Home metro means the passenger's verified metropolitan area of residence, not their payment address or departure airport.\n\n## 2. Basic assistance\nExplain the flight status, feasible recovery options and any information still needed. Discretionary assistance must be recorded as COURTESY rather than a standard entitlement. A service offer does not certify that it was delivered.\n\n## 3. Meal vouchers\nMeal eligibility depends on the waiting time and approved cause, independently of hotel eligibility.\n\n### 3.1 Three-hour waiting threshold\nProvide a meal voucher after at least three consecutive hours of waiting for onward travel due to a final approved airline-controlled cause. Mechanical, crew and airline-operations disruptions can qualify. Do not count the same waiting interval twice when offers change.\n\n### 3.2 Meal exclusions\nWeather-only and external air-traffic-control delays do not qualify for standard meal vouchers. If the cause is unconfirmed, meal eligibility requires review. Staff may separately authorize courtesy assistance.\n\n## 4. Overnight accommodation\nDetermine eligibility before arranging or reimbursing a room. An overnight delay alone is insufficient.\n\n### 4.1 Primary hotel eligibility\nNorthstar provides an approved hotel when all four conditions hold: a valid disrupted Northstar itinerary; a final approved airline-controlled cause; onward travel requiring an overnight wait at the affected airport; and a passenger away from their verified home metro area. All conditions are required together.\n\n### 4.2 Overnight necessity\nAn overnight wait means no reasonable onward option can be completed without staying at the recovery station into the following calendar day. Use feasible flight options and boarding constraints. A late departure or device date change alone does not establish overnight necessity.\n\n### 4.3 Home-city restriction\nA passenger stranded at an airport within their own home metro area is not eligible for the standard hotel. This applies even if their trip began elsewhere. Missing residence information requires review.\n\n### 4.4 Weather, external ATC and unresolved causes\nWeather and external ATC disruptions do not qualify for standard hotel coverage. UNKNOWN, MIXED_PENDING or an investigation still in progress means NEEDS_REVIEW; do not promise payment or assume the cause is uncontrollable.\n\n### 4.5 Crew scheduling coverage\nA finalized CREW_OPERATIONAL disruption is included in current hotel coverage. A crew shortage or rotation problem can qualify when the overnight, away-from-home and valid-itinerary conditions in \u00a74.1 also hold. This inclusion took effect January 1, 2026.\n\n### 4.6 Self-booked hotels and written authorization\nNorthstar normally issues an approved hotel voucher. Before booking independently, obtain written authorization stating the maximum reimbursable rate and approved dates. A receipt or verbal suggestion alone does not establish reimbursement approval.\n\n### 4.7 Approved cause controls\nThe latest authorized, approved final investigation controls eligibility, even if a gate announcement initially said weather. A later unapproved draft cannot override an approved finding. Consult NS-CAUSE-2026 for investigation states.\n\n### 4.8 Eligibility versus fulfillment\nFull partner hotels do not remove eligibility. Record fulfillment separately as NOT_REQUESTED, SEARCHING, VOUCHER_AUTHORIZED, VOUCHER_ISSUED, RECEIPT_PENDING or CLOSED. Authorization is not proof of an issued voucher or booked room. Arrange alternative approved accommodation or escalate capacity problems.\n\n### 4.9 Residence verification\nDo not substitute billing address, nationality, telephone area code or trip origin for verified residence. Conflicting residence sources require authorized verification before deciding the home-metro condition.\n\n## 5. Review and communication\nExplain which eligibility conditions hold and which facts are missing. Escalate accessibility or safety needs to trained staff. Never state that a room is reserved, an expense reimbursed or a benefit delivered without fulfillment evidence. Refund options remain governed by NS-REF-2026.\n",
+    "corpus/policies/04_disruption_classification_2026.md": "---\ndocument_id: \"NS-CAUSE-2026\"\ntitle: \"Disruption Cause Classification and Investigation Standard\"\ndocument_type: \"policy\"\nversion: \"1.4\"\neffective_from: \"2026-01-01\"\nstatus: \"current\"\nowner: \"Network Operations Control\"\nsource_kind: \"synthetic\"\nfictional_airline: \"Northstar Air\"\n---\n\n# Disruption Cause Classification \u2014 NS-CAUSE-2026\n\nEffective January 1, 2026. Owner: Network Operations Control. This fictional Northstar standard explains how approved causes are recorded for passenger-care decisions. An observed delay and its verified cause are different facts.\n\n## 1. Purpose and scope\nDetermine the controlling cause of the affected disruption before assessing cause-dependent benefits. A gate announcement, airport display or passenger description may be useful evidence, but is not automatically an approved classification. Protected rebooking can proceed while the cause remains unresolved.\n\n### 1.1 Required observations\nCapture the affected flight, date, station, operational timeline, source records, analyst and approval time. Keep observed timestamps separate from when information entered a system. Do not assign a cause simply to produce a desired hotel decision.\n\n## 2. Cause codes\nEach code describes the verified cause, not whether a hotel has been booked. Meal and hotel conditions still come from NS-CARE-2026.\n\n### 2.1 Airline-controlled causes\nMECHANICAL means an aircraft defect or maintenance hold under carrier responsibility. CREW_OPERATIONAL means an internal crew scheduling, reserve assignment or staffing problem. AIRLINE_OPERATIONS means carrier-controlled gate, baggage-loading, aircraft rotation or dispatch planning. Approved examples include a confirmed failed component or an internal reserve-assignment error.\n\n### 2.2 Uncontrollable and unresolved causes\nWEATHER means external weather conditions. ATC_EXTERNAL means an external air-traffic restriction. UNKNOWN means verified information is insufficient. MIXED_PENDING means multiple material causes exist and a controlling cause has not been assigned. Unresolved is not the same as uncontrollable.\n\n## 3. Investigation and approval\nUse the latest applicable approved finding. Preserve previous observations so a reviewer can explain why a classification changed.\n\n### 3.1 Preliminary report\nAn initial gate or dispatcher report is PROVISIONAL. It can explain why an investigation is open, but must not independently grant or deny cause-dependent hotel assistance. A confident description is not an approval event.\n\n### 3.2 Cause not yet confirmed\nUNKNOWN, MIXED_PENDING or an open investigation means NEEDS_REVIEW for hotel or meal decisions that depend on controllability. Request the approved cause rather than promising payment or treating uncertainty as a weather exclusion. Rebooking eligibility is assessed separately.\n\n### 3.3 Final finding\nAn authorized analyst must identify the controlling cause, document the reasoning and sign the final revision. A finalized, approved mechanical finding can supersede an earlier provisional weather remark. Verify that the finding concerns the passenger's actual disrupted flight.\n\n### 3.4 Mixed causes\nWhen weather and an internal problem both contributed, identify which cause prevented timely operation during the relevant interval. Do not count keywords or assume any weather mention excludes assistance. Keep MIXED_PENDING when the evidence cannot resolve the controlling cause.\n\n### 3.5 Causal sequence\nWeather may delay an aircraft before a later crew problem prevents departure. A maintenance note may concern a different aircraft after a swap. Compare the chronology and affected segment; the last event mentioned is not necessarily the controlling cause.\n\n### 3.6 Evidence precedence\nThe latest authorized, signed final investigation takes precedence over preliminary gate comments. Preserve the earlier observation, its timestamp and the approved revision explaining the change. Operational timestamps establish when events occurred; they do not by themselves establish why. Never overwrite an earlier record to hide a changed decision.\n\n### 3.7 Timestamp conflicts\nCompare timezone-aware or UTC timestamps from reconciled operational records. A later ingestion time is not proof that an event happened later. If material times conflict, seek review rather than selecting the most convenient value.\n\n### 3.8 Investigation states\nThe lifecycle is REPORTED, INVESTIGATING, PROPOSED and FINAL_APPROVED. PROPOSED is a draft awaiting authorized approval; it cannot override a valid approved finding. REOPENED means new evidence requires review of the earlier result. Keep the status and cause code as separate fields.\n\n## 4. Applying the cause\nMechanical, crew-operational and airline-operations causes can satisfy the current hotel controllability requirement, but overnight necessity and residence conditions still apply. Weather and external ATC do not satisfy standard care coverage. Cause is not a prerequisite for protected rebooking or a qualifying disruption refund.\n\n## 5. Example\nA gate agent initially reports weather. An authorized investigation later confirms an internal crew scheduling failure after the restriction ended. Use the approved crew classification, retain the original weather observation and reassess any cause-dependent benefit under the applicable policy edition.\n\n## 6. Communication\nExplain the approved finding, approval status and any missing evidence. Refer to NS-CARE-2026 for meals and hotels, NS-CONN-2026 for protected rebooking and NS-REF-2026 for refunds. Classification alone never proves that a service was delivered.\n"
+  },
+  "source_repair_diff": "--- broken/corpus/policies/02_passenger_care_2026.md\n+++ corrected/corpus/policies/02_passenger_care_2026.md\n@@ -39,7 +39,7 @@\n Determine eligibility before arranging or reimbursing a room. An overnight delay alone is insufficient.\n \n ### 4.1 Primary hotel eligibility\n-Northstar provides an approved hotel when all four conditions hold: a valid disrupted Northstar itinerary; a final approved MECHANICAL or AIRLINE_OPERATIONS cause; onward travel requiring an overnight wait at the affected airport; and a passenger away from their verified home metro area. All conditions are required together.\n+Northstar provides an approved hotel when all four conditions hold: a valid disrupted Northstar itinerary; a final approved airline-controlled cause; onward travel requiring an overnight wait at the affected airport; and a passenger away from their verified home metro area. All conditions are required together.\n \n ### 4.2 Overnight necessity\n An overnight wait means no reasonable onward option can be completed without staying at the recovery station into the following calendar day. Use feasible flight options and boarding constraints. A late departure or device date change alone does not establish overnight necessity.\n@@ -51,7 +51,7 @@\n Weather and external ATC disruptions do not qualify for standard hotel coverage. UNKNOWN, MIXED_PENDING or an investigation still in progress means NEEDS_REVIEW; do not promise payment or assume the cause is uncontrollable.\n \n ### 4.5 Crew scheduling coverage\n-A finalized CREW_OPERATIONAL disruption is excluded from the standard hotel commitment. Crew shortages and rotation problems do not qualify for a routine hotel in this edition, even when airline-controlled. A duty manager may authorize a COURTESY booking, but it is not a standard benefit. Mechanical and airline-operations disruptions can qualify when the overnight, away-from-home and valid-itinerary conditions in \u00a74.1 hold.\n+A finalized CREW_OPERATIONAL disruption is included in current hotel coverage. A crew shortage or rotation problem can qualify when the overnight, away-from-home and valid-itinerary conditions in \u00a74.1 also hold. This inclusion took effect January 1, 2026.\n \n ### 4.6 Self-booked hotels and written authorization\n Northstar normally issues an approved hotel voucher. Before booking independently, obtain written authorization stating the maximum reimbursable rate and approved dates. A receipt or verbal suggestion alone does not establish reimbursement approval.\n",
+  "original_status_defect_probes": [
+    {
+      "question": "Northstar confirmed that crew scheduling caused my delay. I have a valid Northstar ticket, I'm away from home, and the next available flight is tomorrow. Is a hotel part of the standard benefit?",
+      "answer": {
+        "answer": "Yes \u2014 under the current 2026 edition, a finalized `CREW_OPERATIONAL` cause is included among airline-controlled disruptions effective 2026-01-01, so it is within the standard overnight hotel commitment (NS-CARE-2026 \u00a71.2, \u00a74.5). The rule is conjunctive: valid disrupted Northstar itinerary, airline-controlled final approved cause, an overnight wait genuinely required because no feasible onward Northstar option completes before the next calendar day, and the overnight station outside your verified home metro area (\u00a74.1\u2013\u00a74.3). Accommodation is normally issued as an approved hotel voucher; self-booking needs written authorization of rate and dates (\u00a74.6). Eligibility is not the same as fulfillment \u2014 it does not mean a room has been booked (\u00a74.8). Note a metadata conflict: the archived 2025 edition, which excluded crew-related causes, is still tagged \"current\" though it says it was superseded by NS-CARE-2026 (NS-CARE-2025 \u00a73.2, \u00a73.8); for a 2026 event the 2026 rule governs.",
+        "citations": [
+          "NS-CARE-2026#1.2",
+          "NS-CARE-2026#4.5",
+          "NS-CARE-2026#4.1",
+          "NS-CARE-2026#4.2",
+          "NS-CARE-2026#4.3",
+          "NS-CARE-2026#4.6",
+          "NS-CARE-2026#4.8",
+          "NS-CARE-2025#3.2",
+          "NS-CARE-2025#3.8"
+        ],
+        "missing_information": []
+      }
+    },
+    {
+      "question": "Northstar confirmed a crew shortage caused my delay. I've been waiting three consecutive hours past my onward flight's original departure time. Does the meal voucher policy cover this?",
+      "answer": {
+        "answer": "Yes \u2014 under the current policy (NS-CARE-2026, v2.1, effective 2026-01-01), a crew shortage falls within scope. \u00a71.2 defines an airline-controlled disruption as one whose final approved root-cause classification is MECHANICAL, CREW_OPERATIONAL or AIRLINE_OPERATIONS. \u00a73.1 then provides that when an airline-controlled disruption forces a wait of three consecutive hours or more beyond the originally scheduled onward departure at the recovery airport, Northstar offers one meal voucher per affected meal period. So the described facts match the published rule, provided the crew cause is the final approved classification rather than an informal gate comment; if the cause record is still UNKNOWN or pending, \u00a73.2 requires the meal decision to be returned as NEEDS_REVIEW. Weather or external-ATC causes would not qualify (\u00a73.2). This is Northstar's internal customer-care commitment, not a federal entitlement. I cannot confirm what has actually been issued on your booking.",
+        "citations": [
+          "NS-CARE-2026#1.2",
+          "NS-CARE-2026#3.1",
+          "NS-CARE-2026#3.2"
+        ],
+        "missing_information": []
+      }
+    },
+    {
+      "question": "A crew rotation problem means I have to stay overnight away from home. Northstar confirmed the cause. Is a hotel only a courtesy, or part of the normal commitment?",
+      "answer": {
+        "answer": "Under the current edition (NS-CARE-2026, effective 2026-01-01), a finalized `CREW_OPERATIONAL` cause counts as airline-controlled, so an overnight hotel is part of Northstar's normal published commitment \u2014 not merely a courtesy (\u00a71.2, \u00a74.5). Eligibility is conjunctive: a valid disrupted Northstar itinerary, an airline-controlled final approved cause, a genuine overnight wait at the recovery airport (not just a late departure), and the overnight station outside your verified home metro area (\u00a74.1\u2013\u00a74.3). Accommodation is normally issued as an approved hotel voucher; self-booking needs written authorization of dates and maximum rate (\u00a74.6). Eligibility is also distinct from fulfillment \u2014 if approved inventory is full, eligibility stands and the case is escalated (\u00a74.8). Note the archived 2025 edition excluded crew causes from the routine hotel commitment (NS-CARE-2025 \u00a73.2); it applies only to 2025 travel dates, though it is confusingly still tagged \"current\" in metadata.",
+        "citations": [
+          "NS-CARE-2026#1.2",
+          "NS-CARE-2026#4.5",
+          "NS-CARE-2026#4.1",
+          "NS-CARE-2026#4.2",
+          "NS-CARE-2026#4.3",
+          "NS-CARE-2026#4.6",
+          "NS-CARE-2026#4.8",
+          "NS-CARE-2025#3.2"
+        ],
+        "missing_information": []
+      }
+    }
+  ],
+  "stages": {
+    "broken_live": {
+      "namespace": "part6-compact-broken-v1",
+      "evidence": [
+        {
+          "_id": "17abb68359e3e93bc75fd46cf97d42d829c01893334bf7db53b86cd48057c060",
+          "body": "## 2. Rebooking and passenger choice\nRebooking eligibility, an available offer and a confirmed ticket are different stages. Staff must explain which stage has actually been reached.\n\n### 2.1 No-additional-fare rebooking\nFor a verified protected missed connection, Northstar offers the earliest available Northstar-operated itinerary to the original destination at no additional fare. This applies to weather and other uncontrollable causes as well as mechanical, crew and airline-operations disruptions. Seat availability must be confirmed; no particular departure time is guaranteed.\n\n### 2.2 Available alternatives\nSearch feasible same-day service, later connections and then next-day travel, considering the passenger's documented needs. A search result or temporary seat hold is not a confirmed reservation. External-carrier transfers require separate approval.\n\n### 2.3 Passenger decision\nRecord an offer as OFFERED, ACCEPTED, DECLINED or EXPIRED, including its timestamp and notification channel. Expiry or silence does not prove acceptance. A passenger may decline an alternative without losing an otherwise qualifying refund option.\n\n### 2.4 Boarding feasibility\nAn aircraft still at the gate may already be closed for boarding. Use recorded boarding events and realistic transfer constraints, rather than scheduled departure alone. Escalate conflicting timestamps instead of guessing.\n\n### 2.5 Offer versus confirmed booking\nA text offering another flight does not mean the passenger is booked. Distinguish SEARCHED, OFFERED, ACCEPTED, TICKETED and FLOWN. Confirmation requires an actual ticketed reservation. If no seats are available, record NO_CURRENT_INVENTORY: recovery eligibility remains, but transport is not confirmed.\n\n### 2.6 Changed routing\nA different airport, additional connection or substantial arrival change may affect refund eligibility. Check accessibility needs before presenting a routing as suitable. Fare price alone does not establish suitability.\n\n### 2.7 Required information\nRecord the original ticket, affected segments, boarding and arrival times, available alternatives, passenger choice and applicable policy version. An unresolved cause does not prevent protected rebooking; cause matters separately for passenger care.\n\n### 2.8 Conflicting messages\nA gate agent, app and phone agent may show different inventory snapshots. Identify the current offer and whether a ticket exists. Multiple messages are not multiple confirmed bookings. Tell the passenger which offer replaced an earlier proposal.\n\n",
+          "document_id": "NS-CONN-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 3732.0,
+          "section_ids": [
+            "2",
+            "2.1",
+            "2.2",
+            "2.3",
+            "2.4",
+            "2.5",
+            "2.6",
+            "2.7",
+            "2.8"
+          ],
+          "source_checksum": "5e2b5ec0ca31de04d6b0e5e96d1229daddfbb9c0d4f69543df64c2c1b42319e2",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/01_connection_protection_2026.md",
+          "start_char": 1193.0,
+          "status": "current",
+          "title": "Connection Protection and Involuntary Rebooking Standard",
+          "version": "2.0"
+        },
+        {
+          "_id": "8b84448a231689e30add1dac1902ae8eb90399e388d4bb3bdeb7ee1da166d370",
+          "body": "## 1. Protected connections\nA missed connection and a refund are separate decisions. Use this policy for replacement travel and NS-REF-2026 for refunds. Hotel assistance is assessed separately under NS-CARE-2026.\n\n### 1.1 Covered transportation\nA protected itinerary has at least two domestic Northstar-operated flights on the same ticket and reservation, sold as one continuous journey. The first flight must be disrupted before the onward flight's boarding cutoff. Separate tickets, codeshares, interline travel and international itineraries are outside this policy; refer those passengers to a specialist.\n\n### 1.2 Confirming a missed connection\nCompare actual inbound gate arrival, required transfer time and the onward boarding cutoff. A delayed inbound flight does not prove a missed connection if onward boarding remains open. Missing or contradictory operational times require review.\n\n",
+          "document_id": "NS-CONN-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 1193.0,
+          "section_ids": [
+            "1",
+            "1.1",
+            "1.2"
+          ],
+          "source_checksum": "5e2b5ec0ca31de04d6b0e5e96d1229daddfbb9c0d4f69543df64c2c1b42319e2",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/01_connection_protection_2026.md",
+          "start_char": 299.0,
+          "status": "current",
+          "title": "Connection Protection and Involuntary Rebooking Standard",
+          "version": "2.0"
+        },
+        {
+          "_id": "1fb36d3a915eb92099e264a60f4a8683d4d098a7275d3ea3c720d88f4c10a188",
+          "body": "## 4. Overnight accommodation\nDetermine eligibility before arranging or reimbursing a room. An overnight delay alone is insufficient.\n\n### 4.1 Primary hotel eligibility\nNorthstar provides an approved hotel when all four conditions hold: a valid disrupted Northstar itinerary; a final approved MECHANICAL or AIRLINE_OPERATIONS cause; onward travel requiring an overnight wait at the affected airport; and a passenger away from their verified home metro area. All conditions are required together.\n\n### 4.2 Overnight necessity\nAn overnight wait means no reasonable onward option can be completed without staying at the recovery station into the following calendar day. Use feasible flight options and boarding constraints. A late departure or device date change alone does not establish overnight necessity.\n\n### 4.3 Home-city restriction\nA passenger stranded at an airport within their own home metro area is not eligible for the standard hotel. This applies even if their trip began elsewhere. Missing residence information requires review.\n\n### 4.4 Weather, external ATC and unresolved causes\nWeather and external ATC disruptions do not qualify for standard hotel coverage. UNKNOWN, MIXED_PENDING or an investigation still in progress means NEEDS_REVIEW; do not promise payment or assume the cause is uncontrollable.\n\n### 4.5 Crew scheduling coverage\nA finalized CREW_OPERATIONAL disruption is excluded from the standard hotel commitment. Crew shortages and rotation problems do not qualify for a routine hotel in this edition, even when airline-controlled. A duty manager may authorize a COURTESY booking, but it is not a standard benefit. Mechanical and airline-operations disruptions can qualify when the overnight, away-from-home and valid-itinerary conditions in \u00a74.1 hold.\n\n### 4.6 Self-booked hotels and written authorization\nNorthstar normally issues an approved hotel voucher. Before booking independently, obtain written authorization stating the maximum reimbursable rate and approved dates. A receipt or verbal suggestion alone does not establish reimbursement approval.\n\n### 4.7 Approved cause controls\nThe latest authorized, approved final investigation controls eligibility, even if a gate announcement initially said weather. A later unapproved draft cannot override an approved finding. Consult NS-CAUSE-2026 for investigation states.\n\n### 4.8 Eligibility versus fulfillment\nFull partner hotels do not remove eligibility. Record fulfillment separately as NOT_REQUESTED, SEARCHING, VOUCHER_AUTHORIZED, VOUCHER_ISSUED, RECEIPT_PENDING or CLOSED. Authorization is not proof of an issued voucher or booked room. Arrange alternative approved accommodation or escalate capacity problems.\n\n### 4.9 Residence verification\nDo not substitute billing address, nationality, telephone area code or trip origin for verified residence. Conflicting residence sources require authorized verification before deciding the home-metro condition.\n\n",
+          "document_id": "NS-CARE-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 4903.0,
+          "section_ids": [
+            "4",
+            "4.1",
+            "4.2",
+            "4.3",
+            "4.4",
+            "4.5",
+            "4.6",
+            "4.7",
+            "4.8",
+            "4.9"
+          ],
+          "source_checksum": "980bdfb430b46f47313328e1993f76231f2ffa467586e029ab083df3fb34d51d",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/02_passenger_care_2026.md",
+          "start_char": 1959.0,
+          "status": "current",
+          "title": "Passenger Care, Meal Assistance and Overnight Accommodation",
+          "version": "2.1"
+        },
+        {
+          "_id": "1edfd2ea7288e9f147d94fbc1623a10603d6c3897eb7747032ae007d1a203e86",
+          "body": "## 1. Coverage and definitions\nUse the policy effective on the disruption date. A passenger asking about today's benefits should receive the current rule, while a historical claim uses the edition in force at that time.\n\n### 1.1 Covered passengers\nThe passenger must hold a valid disrupted Northstar itinerary and be present at the affected airport. Protected rebooking is governed separately by NS-CONN-2026.\n\n### 1.2 Airline-controlled causes and home metro\nMECHANICAL, CREW_OPERATIONAL and AIRLINE_OPERATIONS are airline-controlled causes. WEATHER and ATC_EXTERNAL are uncontrollable. UNKNOWN and MIXED_PENDING are unresolved. Home metro means the passenger's verified metropolitan area of residence, not their payment address or departure airport.\n\n",
+          "document_id": "NS-CARE-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 1035.0,
+          "section_ids": [
+            "1",
+            "1.1",
+            "1.2"
+          ],
+          "source_checksum": "980bdfb430b46f47313328e1993f76231f2ffa467586e029ab083df3fb34d51d",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/02_passenger_care_2026.md",
+          "start_char": 282.0,
+          "status": "current",
+          "title": "Passenger Care, Meal Assistance and Overnight Accommodation",
+          "version": "2.1"
+        },
+        {
+          "_id": "ad67c8b5261c52989a4273b0c701bd745ddc0c59b1a5e3edcf39b2c0163a38e9",
+          "body": "## 6. Scope examples\nA weather-delayed passenger on one protected Northstar ticket may qualify for no-additional-fare rebooking. A traveler on two separately purchased tickets is outside protected-connection coverage and needs specialist review. Neither example alone determines hotel or refund eligibility.\n",
+          "document_id": "NS-CONN-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 4705.0,
+          "section_ids": [
+            "6"
+          ],
+          "source_checksum": "5e2b5ec0ca31de04d6b0e5e96d1229daddfbb9c0d4f69543df64c2c1b42319e2",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/01_connection_protection_2026.md",
+          "start_char": 4397.0,
+          "status": "current",
+          "title": "Connection Protection and Involuntary Rebooking Standard",
+          "version": "2.0"
+        },
+        {
+          "_id": "750ab844d99d196b9ec926f68d4264625cceaa16e91ff1fd0d5da06bca3d63e6",
+          "body": "## 4. Amount and processing\nAn eligibility decision does not establish that payment has been made. Explain any missing accounting or payment information.\n\n### 4.1 Unused value\nAn entirely unused qualifying ticket may receive a full refund. For partly used tickets, calculate unused transportation and eligible fees from accounting records. Do not estimate value from distance or delay length.\n\n### 4.2 Payment method and timing\nReturn eligible refunds to the original payment method. Northstar's processing targets are seven business days for credit-card payments and twenty calendar days for other methods after the verified trigger. Missing payment method or trigger date prevents a promised completion date.\n\n",
+          "document_id": "NS-REF-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 4993.0,
+          "section_ids": [
+            "4",
+            "4.1",
+            "4.2"
+          ],
+          "source_checksum": "381046f7b03d3dd44685603fb70d19a6db14a3f605fc1300802f5297122e2683",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/03_refund_policy_2026.md",
+          "start_char": 4281.0,
+          "status": "current",
+          "title": "Flight Disruption Refund Eligibility and Passenger Choice",
+          "version": "2.0"
+        },
+        {
+          "_id": "f37dde43f000da84cf79382cd21384577e7e5ac5b1f51a2e90e579fc6e565d7d",
+          "body": "\n# Connection Protection and Rebooking \u2014 NS-CONN-2026\n\nEffective January 1, 2026. Owner: Customer Operations. This fictional Northstar Air policy covers domestic protected connections. It describes recovery eligibility; an eligible passenger still needs a confirmed seat before travel is arranged.\n\n",
+          "document_id": "NS-CONN-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 299.0,
+          "section_ids": [],
+          "source_checksum": "5e2b5ec0ca31de04d6b0e5e96d1229daddfbb9c0d4f69543df64c2c1b42319e2",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/01_connection_protection_2026.md",
+          "start_char": 0.0,
+          "status": "current",
+          "title": "Connection Protection and Involuntary Rebooking Standard",
+          "version": "2.0"
+        },
+        {
+          "_id": "775aeaada26be9e29f8ad27ccd501370bdfd124ea237119d8521363806265cbd",
+          "body": "## 3. Refund alternative\nA missed connection does not automatically create a refund. Check cancellation or significant itinerary change and the passenger's decision under NS-REF-2026. Completed replacement travel generally prevents a full refund for transportation used.\n\n",
+          "document_id": "NS-CONN-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 4004.0,
+          "section_ids": [
+            "3"
+          ],
+          "source_checksum": "5e2b5ec0ca31de04d6b0e5e96d1229daddfbb9c0d4f69543df64c2c1b42319e2",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/01_connection_protection_2026.md",
+          "start_char": 3732.0,
+          "status": "current",
+          "title": "Connection Protection and Involuntary Rebooking Standard",
+          "version": "2.0"
+        },
+        {
+          "_id": "72bce978d3c40d5de81d430e98a34c8da29d48a1d4ea145756021680a452d380",
+          "body": "## 3. Qualifying disruption and passenger decision\nThe approved cause does not determine whether a cancellation or significant itinerary change qualifies. Weather-related changes can qualify just as airline-controlled changes can.\n\n### 3.1 Cancellation\nA canceled covered flight qualifies for assessment when the passenger declines substitute travel. Do not treat an ordinary delay as a cancellation. Verify the carrier's actual flight status.\n\n### 3.2 Domestic significant-change threshold\nA replacement scheduled to arrive at the final destination at least three hours later than originally scheduled meets the domestic arrival-change threshold. Departure at least three hours earlier can also qualify. Compare timezone-aware scheduled timestamps from the original ticket and replacement offer.\n\n### 3.3 Passenger choice\nRecord whether the passenger requested a refund, declined replacement travel, accepted a credit or traveled. An unanswered offer does not prove acceptance or rejection. Verify delivery and expiry before deciding what response occurred.\n\n### 3.4 Replacement flight already used\nA passenger who flew the replacement generally cannot obtain a full refund for transportation already used under this disruption remedy. Arrival five hours late does not change that rule. Separate remedies for unused travel, downgrade or optional-service fees may still apply.\n\n### 3.5 Final destination, not first-leg delay\nA first flight arriving four hours late does not by itself establish the final-arrival change. A later connection may reduce the difference; a short inbound delay can also cause an overnight arrival change. Without replacement final-arrival information, the significant-change test remains unresolved.\n\n### 3.6 Offer status\nCREATED, DELIVERED, VIEWED, ACCEPTED, DECLINED, EXPIRED and FLOWN describe different events. DELIVERED means a notification reached the passenger's channel, not that they accepted travel. An internally generated voucher or offer does not close a refund request.\n\n### 3.7 Partly used tickets\nIf the passenger flew the first segment but declines qualifying onward travel, assess the unused ticket portion using coupon accounting. Do not promise the entire fare or calculate a dollar amount without ticket-value records. Eligibility and refund amount are separate questions.\n\n### 3.8 Other significant changes\nA changed airport, additional connection or qualifying cabin downgrade may matter even when the arrival difference is under three hours. Compare the original and replacement itineraries before deciding. Duration is not the only qualifying criterion.\n\n",
+          "document_id": "NS-REF-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 4281.0,
+          "section_ids": [
+            "3",
+            "3.1",
+            "3.2",
+            "3.3",
+            "3.4",
+            "3.5",
+            "3.6",
+            "3.7",
+            "3.8"
+          ],
+          "source_checksum": "381046f7b03d3dd44685603fb70d19a6db14a3f605fc1300802f5297122e2683",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/03_refund_policy_2026.md",
+          "start_char": 1674.0,
+          "status": "current",
+          "title": "Flight Disruption Refund Eligibility and Passenger Choice",
+          "version": "2.0"
+        },
+        {
+          "_id": "ded67467c458276d40049c94b5ba56324b74c1f63747be0f1c00e00851b779f1",
+          "body": "## 1. Scope and required information\nA missed connection does not automatically create a refund entitlement. Assess the change to the whole journey, passenger choice and transportation already used.\n\n### 1.1 Evidence required\nObtain original and replacement final-destination arrival times, cancellation status, ticket coupon usage and the passenger's response to alternatives. A missed connection alone does not prove a significant change or a decision to decline travel. Missing facts should be identified rather than invented.\n\n",
+          "document_id": "NS-REF-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 862.0,
+          "section_ids": [
+            "1",
+            "1.1"
+          ],
+          "source_checksum": "381046f7b03d3dd44685603fb70d19a6db14a3f605fc1300802f5297122e2683",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/03_refund_policy_2026.md",
+          "start_char": 331.0,
+          "status": "current",
+          "title": "Flight Disruption Refund Eligibility and Passenger Choice",
+          "version": "2.0"
+        },
+        {
+          "_id": "63ea292f32c724e9fbc32b18fcfedcd753dc6236755678209fc556e645ca10d9",
+          "body": "## 3. Meal vouchers\nMeal eligibility depends on the waiting time and approved cause, independently of hotel eligibility.\n\n### 3.1 Three-hour waiting threshold\nProvide a meal voucher after at least three consecutive hours of waiting for onward travel due to a final approved airline-controlled cause. Mechanical, crew and airline-operations disruptions can qualify. Do not count the same waiting interval twice when offers change.\n\n### 3.2 Meal exclusions\nWeather-only and external air-traffic-control delays do not qualify for standard meal vouchers. If the cause is unconfirmed, meal eligibility requires review. Staff may separately authorize courtesy assistance.\n\n",
+          "document_id": "NS-CARE-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 1959.0,
+          "section_ids": [
+            "3",
+            "3.1",
+            "3.2"
+          ],
+          "source_checksum": "980bdfb430b46f47313328e1993f76231f2ffa467586e029ab083df3fb34d51d",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/02_passenger_care_2026.md",
+          "start_char": 1292.0,
+          "status": "current",
+          "title": "Passenger Care, Meal Assistance and Overnight Accommodation",
+          "version": "2.1"
+        },
+        {
+          "_id": "1f90c9f0d1025348dd959a521cd284f0b00dc4f77bb17cef683753d91f7ca209",
+          "body": "## 5. Examples and exceptions\nA passenger who declines a replacement arriving twenty hours late may qualify whether the original disruption was mechanical or weather-related. A passenger who flies that replacement generally cannot obtain a full used-ticket refund under the change remedy. A missed connection alone remains insufficient to decide.\n\n",
+          "document_id": "NS-REF-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 5341.0,
+          "section_ids": [
+            "5"
+          ],
+          "source_checksum": "381046f7b03d3dd44685603fb70d19a6db14a3f605fc1300802f5297122e2683",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/03_refund_policy_2026.md",
+          "start_char": 4993.0,
+          "status": "current",
+          "title": "Flight Disruption Refund Eligibility and Passenger Choice",
+          "version": "2.0"
+        },
+        {
+          "_id": "ca8344606b461d9a9bf4454e97706c9499aefd96d0c8817acfb5a9728efb0e78",
+          "body": "\n# Disruption Refunds and Passenger Choice \u2014 NS-REF-2026\n\nEffective January 1, 2026. Owner: Ticketing Compliance. This fictional Northstar Air policy describes domestic disruption refunds. It does not replace applicable law or establish another airline's obligations. Rebooking and passenger-care benefits are separate decisions.\n\n",
+          "document_id": "NS-REF-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 331.0,
+          "section_ids": [],
+          "source_checksum": "381046f7b03d3dd44685603fb70d19a6db14a3f605fc1300802f5297122e2683",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/03_refund_policy_2026.md",
+          "start_char": 0.0,
+          "status": "current",
+          "title": "Flight Disruption Refund Eligibility and Passenger Choice",
+          "version": "2.0"
+        },
+        {
+          "_id": "23e2f30394e250f4f992e32e6886893ee38c3c0534ed21b5959f7fbf2ff49881",
+          "body": "\n# Meals and Overnight Hotels \u2014 NS-CARE-2026\n\nEffective January 1, 2026. Owner: Customer Experience Operations. These are fictional Northstar Air service commitments for disrupted domestic travel, not universal legal rights. Assess meals, hotels, rebooking and refunds separately.\n\n",
+          "document_id": "NS-CARE-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 282.0,
+          "section_ids": [],
+          "source_checksum": "980bdfb430b46f47313328e1993f76231f2ffa467586e029ab083df3fb34d51d",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/02_passenger_care_2026.md",
+          "start_char": 0.0,
+          "status": "current",
+          "title": "Passenger Care, Meal Assistance and Overnight Accommodation",
+          "version": "2.1"
+        },
+        {
+          "_id": "28ecc61d5bee48e522cfe8026dba57e2f69c7de3dcce198404fe1e9e67281942",
+          "body": "## 5. Example\nA gate agent initially reports weather. An authorized investigation later confirms an internal crew scheduling failure after the restriction ended. Use the approved crew classification, retain the original weather observation and reassess any cause-dependent benefit under the applicable policy edition.\n\n",
+          "document_id": "NS-CAUSE-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 5054.0,
+          "section_ids": [
+            "5"
+          ],
+          "source_checksum": "e9cedc796fca2deabc8688f046fb67c88951d2e8c9b661ccc933db8c1c56ba75",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/04_disruption_classification_2026.md",
+          "start_char": 4735.0,
+          "status": "current",
+          "title": "Disruption Cause Classification and Investigation Standard",
+          "version": "1.4"
+        },
+        {
+          "_id": "b23dbdf47aad1fd515b273c7fe58a5ef1397ba9ef2beb2e79473d5d00d81d7a5",
+          "body": "## 3. Investigation and approval\nUse the latest applicable approved finding. Preserve previous observations so a reviewer can explain why a classification changed.\n\n### 3.1 Preliminary report\nAn initial gate or dispatcher report is PROVISIONAL. It can explain why an investigation is open, but must not independently grant or deny cause-dependent hotel assistance. A confident description is not an approval event.\n\n### 3.2 Cause not yet confirmed\nUNKNOWN, MIXED_PENDING or an open investigation means NEEDS_REVIEW for hotel or meal decisions that depend on controllability. Request the approved cause rather than promising payment or treating uncertainty as a weather exclusion. Rebooking eligibility is assessed separately.\n\n### 3.3 Final finding\nAn authorized analyst must identify the controlling cause, document the reasoning and sign the final revision. A finalized, approved mechanical finding can supersede an earlier provisional weather remark. Verify that the finding concerns the passenger's actual disrupted flight.\n\n### 3.4 Mixed causes\nWhen weather and an internal problem both contributed, identify which cause prevented timely operation during the relevant interval. Do not count keywords or assume any weather mention excludes assistance. Keep MIXED_PENDING when the evidence cannot resolve the controlling cause.\n\n### 3.5 Causal sequence\nWeather may delay an aircraft before a later crew problem prevents departure. A maintenance note may concern a different aircraft after a swap. Compare the chronology and affected segment; the last event mentioned is not necessarily the controlling cause.\n\n### 3.6 Evidence precedence\nThe latest authorized, signed final investigation takes precedence over preliminary gate comments. Preserve the earlier observation, its timestamp and the approved revision explaining the change. Operational timestamps establish when events occurred; they do not by themselves establish why. Never overwrite an earlier record to hide a changed decision.\n\n### 3.7 Timestamp conflicts\nCompare timezone-aware or UTC timestamps from reconciled operational records. A later ingestion time is not proof that an event happened later. If material times conflict, seek review rather than selecting the most convenient value.\n\n### 3.8 Investigation states\nThe lifecycle is REPORTED, INVESTIGATING, PROPOSED and FINAL_APPROVED. PROPOSED is a draft awaiting authorized approval; it cannot override a valid approved finding. REOPENED means new evidence requires review of the earlier result. Keep the status and cause code as separate fields.\n\n",
+          "document_id": "NS-CAUSE-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 4378.0,
+          "section_ids": [
+            "3",
+            "3.1",
+            "3.2",
+            "3.3",
+            "3.4",
+            "3.5",
+            "3.6",
+            "3.7",
+            "3.8"
+          ],
+          "source_checksum": "e9cedc796fca2deabc8688f046fb67c88951d2e8c9b661ccc933db8c1c56ba75",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/04_disruption_classification_2026.md",
+          "start_char": 1806.0,
+          "status": "current",
+          "title": "Disruption Cause Classification and Investigation Standard",
+          "version": "1.4"
+        },
+        {
+          "_id": "99a6281b565bed733d255cfe5d9c7245a66c385ecd2d6935db23e74248ce2b39",
+          "body": "## 2. Cause codes\nEach code describes the verified cause, not whether a hotel has been booked. Meal and hotel conditions still come from NS-CARE-2026.\n\n### 2.1 Airline-controlled causes\nMECHANICAL means an aircraft defect or maintenance hold under carrier responsibility. CREW_OPERATIONAL means an internal crew scheduling, reserve assignment or staffing problem. AIRLINE_OPERATIONS means carrier-controlled gate, baggage-loading, aircraft rotation or dispatch planning. Approved examples include a confirmed failed component or an internal reserve-assignment error.\n\n### 2.2 Uncontrollable and unresolved causes\nWEATHER means external weather conditions. ATC_EXTERNAL means an external air-traffic restriction. UNKNOWN means verified information is insufficient. MIXED_PENDING means multiple material causes exist and a controlling cause has not been assigned. Unresolved is not the same as uncontrollable.\n\n",
+          "document_id": "NS-CAUSE-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 1806.0,
+          "section_ids": [
+            "2",
+            "2.1",
+            "2.2"
+          ],
+          "source_checksum": "e9cedc796fca2deabc8688f046fb67c88951d2e8c9b661ccc933db8c1c56ba75",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/04_disruption_classification_2026.md",
+          "start_char": 897.0,
+          "status": "current",
+          "title": "Disruption Cause Classification and Investigation Standard",
+          "version": "1.4"
+        },
+        {
+          "_id": "c2a1c52199a8ca265068a6ed5db74ba556a14c7a112d58d80fb5572cbd313097",
+          "body": "## 2. Rebooking or refund\nExplain both options when a qualifying disruption occurs. A replacement offer must not be presented as the passenger's only remedy.\n\n### 2.1 No-additional-fare rebooking\nNS-CONN-2026 may provide alternative travel for weather or airline-controlled disruptions. An offer, acceptance and completed travel are different states. Accepting an offer does not establish that the passenger actually flew.\n\n### 2.2 Refund instead of alternative travel\nA cancellation or significant itinerary change can qualify for a refund when the passenger declines the changed itinerary and does not accept replacement travel, credit or other compensation. Rejecting an eligible rebooking does not forfeit an otherwise qualifying refund. Check unused transportation separately from the entire ticket value.\n\n",
+          "document_id": "NS-REF-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 1674.0,
+          "section_ids": [
+            "2",
+            "2.1",
+            "2.2"
+          ],
+          "source_checksum": "381046f7b03d3dd44685603fb70d19a6db14a3f605fc1300802f5297122e2683",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/03_refund_policy_2026.md",
+          "start_char": 862.0,
+          "status": "current",
+          "title": "Flight Disruption Refund Eligibility and Passenger Choice",
+          "version": "2.0"
+        },
+        {
+          "_id": "0f3d3f5a705f27ffc4ef1816d8f81be25b5dea0ec4c5dd8850bc780eb95ea563",
+          "body": "## 5. Escalation\nWhen boarding evidence, ticket linkage or inventory is missing, explain what needs verification. Never claim that a flight has been booked or that compensation has been paid without confirmation.\n\n",
+          "document_id": "NS-CONN-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 4397.0,
+          "section_ids": [
+            "5"
+          ],
+          "source_checksum": "5e2b5ec0ca31de04d6b0e5e96d1229daddfbb9c0d4f69543df64c2c1b42319e2",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/01_connection_protection_2026.md",
+          "start_char": 4183.0,
+          "status": "current",
+          "title": "Connection Protection and Involuntary Rebooking Standard",
+          "version": "2.0"
+        },
+        {
+          "_id": "0c6bcc91c2a942ba156c242e9b3a5565fab148b5892a429dd234846f39a762d6",
+          "body": "## 4. Applying the cause\nMechanical, crew-operational and airline-operations causes can satisfy the current hotel controllability requirement, but overnight necessity and residence conditions still apply. Weather and external ATC do not satisfy standard care coverage. Cause is not a prerequisite for protected rebooking or a qualifying disruption refund.\n\n",
+          "document_id": "NS-CAUSE-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 4735.0,
+          "section_ids": [
+            "4"
+          ],
+          "source_checksum": "e9cedc796fca2deabc8688f046fb67c88951d2e8c9b661ccc933db8c1c56ba75",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/04_disruption_classification_2026.md",
+          "start_char": 4378.0,
+          "status": "current",
+          "title": "Disruption Cause Classification and Investigation Standard",
+          "version": "1.4"
+        },
+        {
+          "_id": "dd796d5817e95550610577fa8699695fd880513aafb890fccbca65f86bcc3f08",
+          "body": "## 2. Basic assistance\nExplain the flight status, feasible recovery options and any information still needed. Discretionary assistance must be recorded as COURTESY rather than a standard entitlement. A service offer does not certify that it was delivered.\n\n",
+          "document_id": "NS-CARE-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 1292.0,
+          "section_ids": [
+            "2"
+          ],
+          "source_checksum": "980bdfb430b46f47313328e1993f76231f2ffa467586e029ab083df3fb34d51d",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/02_passenger_care_2026.md",
+          "start_char": 1035.0,
+          "status": "current",
+          "title": "Passenger Care, Meal Assistance and Overnight Accommodation",
+          "version": "2.1"
+        },
+        {
+          "_id": "1943780b07f50944a0aaeacac16bdc7c087589f90bef186322baf217c07b3dae",
+          "body": "## 4. Passenger care\nA free rebooking does not automatically include meals or a hotel. Assess approved cause, waiting time, overnight necessity and residence under NS-CARE-2026.\n\n",
+          "document_id": "NS-CONN-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 4183.0,
+          "section_ids": [
+            "4"
+          ],
+          "source_checksum": "5e2b5ec0ca31de04d6b0e5e96d1229daddfbb9c0d4f69543df64c2c1b42319e2",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/01_connection_protection_2026.md",
+          "start_char": 4004.0,
+          "status": "current",
+          "title": "Connection Protection and Involuntary Rebooking Standard",
+          "version": "2.0"
+        }
+      ],
+      "answer": {
+        "answer": "Under the current care policy (NS-CARE-2026 v2.1, effective 2026-01-01, applicable on 2026-11-20), a hotel for a finalized CREW_OPERATIONAL disruption is not a standard benefit. \u00a74.1 limits the standard approved hotel to cases where the final approved cause is MECHANICAL or AIRLINE_OPERATIONS (plus valid disrupted itinerary, overnight wait at the affected airport, and being away from your verified home metro). \u00a74.5 states expressly that a finalized crew-scheduling cause is excluded from the standard hotel commitment even though it is airline-controlled; a duty manager may authorize a COURTESY booking, which is discretionary and recorded as COURTESY, not an entitlement (\u00a72). Note a conflict: NS-CAUSE-2026 \u00a74 says crew-operational can satisfy the hotel controllability requirement \u2014 the care policy's specific exclusion is the operative rule, but the discrepancy should be escalated. Meals are separate: three hours' waiting on an airline-controlled cause, including crew, can qualify (\u00a73.1).",
+        "citations": [
+          "NS-CARE-2026#4.1",
+          "NS-CARE-2026#4.5",
+          "NS-CARE-2026#2",
+          "NS-CARE-2026#3.1",
+          "NS-CAUSE-2026#4",
+          "NS-CAUSE-2026#2.1"
+        ],
+        "missing_information": []
+      }
+    },
+    "source_only_repaired_replay": {
+      "same_evidence_slots_and_order": true,
+      "evidence": [
+        {
+          "_id": "17abb68359e3e93bc75fd46cf97d42d829c01893334bf7db53b86cd48057c060",
+          "body": "## 2. Rebooking and passenger choice\nRebooking eligibility, an available offer and a confirmed ticket are different stages. Staff must explain which stage has actually been reached.\n\n### 2.1 No-additional-fare rebooking\nFor a verified protected missed connection, Northstar offers the earliest available Northstar-operated itinerary to the original destination at no additional fare. This applies to weather and other uncontrollable causes as well as mechanical, crew and airline-operations disruptions. Seat availability must be confirmed; no particular departure time is guaranteed.\n\n### 2.2 Available alternatives\nSearch feasible same-day service, later connections and then next-day travel, considering the passenger's documented needs. A search result or temporary seat hold is not a confirmed reservation. External-carrier transfers require separate approval.\n\n### 2.3 Passenger decision\nRecord an offer as OFFERED, ACCEPTED, DECLINED or EXPIRED, including its timestamp and notification channel. Expiry or silence does not prove acceptance. A passenger may decline an alternative without losing an otherwise qualifying refund option.\n\n### 2.4 Boarding feasibility\nAn aircraft still at the gate may already be closed for boarding. Use recorded boarding events and realistic transfer constraints, rather than scheduled departure alone. Escalate conflicting timestamps instead of guessing.\n\n### 2.5 Offer versus confirmed booking\nA text offering another flight does not mean the passenger is booked. Distinguish SEARCHED, OFFERED, ACCEPTED, TICKETED and FLOWN. Confirmation requires an actual ticketed reservation. If no seats are available, record NO_CURRENT_INVENTORY: recovery eligibility remains, but transport is not confirmed.\n\n### 2.6 Changed routing\nA different airport, additional connection or substantial arrival change may affect refund eligibility. Check accessibility needs before presenting a routing as suitable. Fare price alone does not establish suitability.\n\n### 2.7 Required information\nRecord the original ticket, affected segments, boarding and arrival times, available alternatives, passenger choice and applicable policy version. An unresolved cause does not prevent protected rebooking; cause matters separately for passenger care.\n\n### 2.8 Conflicting messages\nA gate agent, app and phone agent may show different inventory snapshots. Identify the current offer and whether a ticket exists. Multiple messages are not multiple confirmed bookings. Tell the passenger which offer replaced an earlier proposal.\n\n",
+          "document_id": "NS-CONN-2026",
+          "document_type": "policy",
+          "title": "Connection Protection and Involuntary Rebooking Standard",
+          "version": "2.0",
+          "effective_from": "2026-01-01",
+          "status": "current",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/01_connection_protection_2026.md",
+          "source_checksum": "5e2b5ec0ca31de04d6b0e5e96d1229daddfbb9c0d4f69543df64c2c1b42319e2",
+          "section_ids": [
+            "2",
+            "2.1",
+            "2.2",
+            "2.3",
+            "2.4",
+            "2.5",
+            "2.6",
+            "2.7",
+            "2.8"
+          ],
+          "start_char": 1193,
+          "end_char": 3732
+        },
+        {
+          "_id": "8b84448a231689e30add1dac1902ae8eb90399e388d4bb3bdeb7ee1da166d370",
+          "body": "## 1. Protected connections\nA missed connection and a refund are separate decisions. Use this policy for replacement travel and NS-REF-2026 for refunds. Hotel assistance is assessed separately under NS-CARE-2026.\n\n### 1.1 Covered transportation\nA protected itinerary has at least two domestic Northstar-operated flights on the same ticket and reservation, sold as one continuous journey. The first flight must be disrupted before the onward flight's boarding cutoff. Separate tickets, codeshares, interline travel and international itineraries are outside this policy; refer those passengers to a specialist.\n\n### 1.2 Confirming a missed connection\nCompare actual inbound gate arrival, required transfer time and the onward boarding cutoff. A delayed inbound flight does not prove a missed connection if onward boarding remains open. Missing or contradictory operational times require review.\n\n",
+          "document_id": "NS-CONN-2026",
+          "document_type": "policy",
+          "title": "Connection Protection and Involuntary Rebooking Standard",
+          "version": "2.0",
+          "effective_from": "2026-01-01",
+          "status": "current",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/01_connection_protection_2026.md",
+          "source_checksum": "5e2b5ec0ca31de04d6b0e5e96d1229daddfbb9c0d4f69543df64c2c1b42319e2",
+          "section_ids": [
+            "1",
+            "1.1",
+            "1.2"
+          ],
+          "start_char": 299,
+          "end_char": 1193
+        },
+        {
+          "_id": "800231a190d66aa3a503bbaf0d05a3a13c085f086a54a9d78cf803b63725636b",
+          "body": "## 4. Overnight accommodation\nDetermine eligibility before arranging or reimbursing a room. An overnight delay alone is insufficient.\n\n### 4.1 Primary hotel eligibility\nNorthstar provides an approved hotel when all four conditions hold: a valid disrupted Northstar itinerary; a final approved airline-controlled cause; onward travel requiring an overnight wait at the affected airport; and a passenger away from their verified home metro area. All conditions are required together.\n\n### 4.2 Overnight necessity\nAn overnight wait means no reasonable onward option can be completed without staying at the recovery station into the following calendar day. Use feasible flight options and boarding constraints. A late departure or device date change alone does not establish overnight necessity.\n\n### 4.3 Home-city restriction\nA passenger stranded at an airport within their own home metro area is not eligible for the standard hotel. This applies even if their trip began elsewhere. Missing residence information requires review.\n\n### 4.4 Weather, external ATC and unresolved causes\nWeather and external ATC disruptions do not qualify for standard hotel coverage. UNKNOWN, MIXED_PENDING or an investigation still in progress means NEEDS_REVIEW; do not promise payment or assume the cause is uncontrollable.\n\n### 4.5 Crew scheduling coverage\nA finalized CREW_OPERATIONAL disruption is included in current hotel coverage. A crew shortage or rotation problem can qualify when the overnight, away-from-home and valid-itinerary conditions in \u00a74.1 also hold. This inclusion took effect January 1, 2026.\n\n### 4.6 Self-booked hotels and written authorization\nNorthstar normally issues an approved hotel voucher. Before booking independently, obtain written authorization stating the maximum reimbursable rate and approved dates. A receipt or verbal suggestion alone does not establish reimbursement approval.\n\n### 4.7 Approved cause controls\nThe latest authorized, approved final investigation controls eligibility, even if a gate announcement initially said weather. A later unapproved draft cannot override an approved finding. Consult NS-CAUSE-2026 for investigation states.\n\n### 4.8 Eligibility versus fulfillment\nFull partner hotels do not remove eligibility. Record fulfillment separately as NOT_REQUESTED, SEARCHING, VOUCHER_AUTHORIZED, VOUCHER_ISSUED, RECEIPT_PENDING or CLOSED. Authorization is not proof of an issued voucher or booked room. Arrange alternative approved accommodation or escalate capacity problems.\n\n### 4.9 Residence verification\nDo not substitute billing address, nationality, telephone area code or trip origin for verified residence. Conflicting residence sources require authorized verification before deciding the home-metro condition.\n\n",
+          "document_id": "NS-CARE-2026",
+          "document_type": "policy",
+          "title": "Passenger Care, Meal Assistance and Overnight Accommodation",
+          "version": "2.1",
+          "effective_from": "2026-01-01",
+          "status": "current",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/02_passenger_care_2026.md",
+          "source_checksum": "6409ef98d4330b1935632fc22f0fd9eb5f25dae1a81bc1c440fe4a88f44f4b68",
+          "section_ids": [
+            "4",
+            "4.1",
+            "4.2",
+            "4.3",
+            "4.4",
+            "4.5",
+            "4.6",
+            "4.7",
+            "4.8",
+            "4.9"
+          ],
+          "start_char": 1959,
+          "end_char": 4717
+        },
+        {
+          "_id": "1edfd2ea7288e9f147d94fbc1623a10603d6c3897eb7747032ae007d1a203e86",
+          "body": "## 1. Coverage and definitions\nUse the policy effective on the disruption date. A passenger asking about today's benefits should receive the current rule, while a historical claim uses the edition in force at that time.\n\n### 1.1 Covered passengers\nThe passenger must hold a valid disrupted Northstar itinerary and be present at the affected airport. Protected rebooking is governed separately by NS-CONN-2026.\n\n### 1.2 Airline-controlled causes and home metro\nMECHANICAL, CREW_OPERATIONAL and AIRLINE_OPERATIONS are airline-controlled causes. WEATHER and ATC_EXTERNAL are uncontrollable. UNKNOWN and MIXED_PENDING are unresolved. Home metro means the passenger's verified metropolitan area of residence, not their payment address or departure airport.\n\n",
+          "document_id": "NS-CARE-2026",
+          "document_type": "policy",
+          "title": "Passenger Care, Meal Assistance and Overnight Accommodation",
+          "version": "2.1",
+          "effective_from": "2026-01-01",
+          "status": "current",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/02_passenger_care_2026.md",
+          "source_checksum": "6409ef98d4330b1935632fc22f0fd9eb5f25dae1a81bc1c440fe4a88f44f4b68",
+          "section_ids": [
+            "1",
+            "1.1",
+            "1.2"
+          ],
+          "start_char": 282,
+          "end_char": 1035
+        },
+        {
+          "_id": "ad67c8b5261c52989a4273b0c701bd745ddc0c59b1a5e3edcf39b2c0163a38e9",
+          "body": "## 6. Scope examples\nA weather-delayed passenger on one protected Northstar ticket may qualify for no-additional-fare rebooking. A traveler on two separately purchased tickets is outside protected-connection coverage and needs specialist review. Neither example alone determines hotel or refund eligibility.\n",
+          "document_id": "NS-CONN-2026",
+          "document_type": "policy",
+          "title": "Connection Protection and Involuntary Rebooking Standard",
+          "version": "2.0",
+          "effective_from": "2026-01-01",
+          "status": "current",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/01_connection_protection_2026.md",
+          "source_checksum": "5e2b5ec0ca31de04d6b0e5e96d1229daddfbb9c0d4f69543df64c2c1b42319e2",
+          "section_ids": [
+            "6"
+          ],
+          "start_char": 4397,
+          "end_char": 4705
+        },
+        {
+          "_id": "750ab844d99d196b9ec926f68d4264625cceaa16e91ff1fd0d5da06bca3d63e6",
+          "body": "## 4. Amount and processing\nAn eligibility decision does not establish that payment has been made. Explain any missing accounting or payment information.\n\n### 4.1 Unused value\nAn entirely unused qualifying ticket may receive a full refund. For partly used tickets, calculate unused transportation and eligible fees from accounting records. Do not estimate value from distance or delay length.\n\n### 4.2 Payment method and timing\nReturn eligible refunds to the original payment method. Northstar's processing targets are seven business days for credit-card payments and twenty calendar days for other methods after the verified trigger. Missing payment method or trigger date prevents a promised completion date.\n\n",
+          "document_id": "NS-REF-2026",
+          "document_type": "policy",
+          "title": "Flight Disruption Refund Eligibility and Passenger Choice",
+          "version": "2.0",
+          "effective_from": "2026-01-01",
+          "status": "current",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/03_refund_policy_2026.md",
+          "source_checksum": "381046f7b03d3dd44685603fb70d19a6db14a3f605fc1300802f5297122e2683",
+          "section_ids": [
+            "4",
+            "4.1",
+            "4.2"
+          ],
+          "start_char": 4281,
+          "end_char": 4993
+        },
+        {
+          "_id": "f37dde43f000da84cf79382cd21384577e7e5ac5b1f51a2e90e579fc6e565d7d",
+          "body": "\n# Connection Protection and Rebooking \u2014 NS-CONN-2026\n\nEffective January 1, 2026. Owner: Customer Operations. This fictional Northstar Air policy covers domestic protected connections. It describes recovery eligibility; an eligible passenger still needs a confirmed seat before travel is arranged.\n\n",
+          "document_id": "NS-CONN-2026",
+          "document_type": "policy",
+          "title": "Connection Protection and Involuntary Rebooking Standard",
+          "version": "2.0",
+          "effective_from": "2026-01-01",
+          "status": "current",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/01_connection_protection_2026.md",
+          "source_checksum": "5e2b5ec0ca31de04d6b0e5e96d1229daddfbb9c0d4f69543df64c2c1b42319e2",
+          "section_ids": [],
+          "start_char": 0,
+          "end_char": 299
+        },
+        {
+          "_id": "775aeaada26be9e29f8ad27ccd501370bdfd124ea237119d8521363806265cbd",
+          "body": "## 3. Refund alternative\nA missed connection does not automatically create a refund. Check cancellation or significant itinerary change and the passenger's decision under NS-REF-2026. Completed replacement travel generally prevents a full refund for transportation used.\n\n",
+          "document_id": "NS-CONN-2026",
+          "document_type": "policy",
+          "title": "Connection Protection and Involuntary Rebooking Standard",
+          "version": "2.0",
+          "effective_from": "2026-01-01",
+          "status": "current",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/01_connection_protection_2026.md",
+          "source_checksum": "5e2b5ec0ca31de04d6b0e5e96d1229daddfbb9c0d4f69543df64c2c1b42319e2",
+          "section_ids": [
+            "3"
+          ],
+          "start_char": 3732,
+          "end_char": 4004
+        },
+        {
+          "_id": "72bce978d3c40d5de81d430e98a34c8da29d48a1d4ea145756021680a452d380",
+          "body": "## 3. Qualifying disruption and passenger decision\nThe approved cause does not determine whether a cancellation or significant itinerary change qualifies. Weather-related changes can qualify just as airline-controlled changes can.\n\n### 3.1 Cancellation\nA canceled covered flight qualifies for assessment when the passenger declines substitute travel. Do not treat an ordinary delay as a cancellation. Verify the carrier's actual flight status.\n\n### 3.2 Domestic significant-change threshold\nA replacement scheduled to arrive at the final destination at least three hours later than originally scheduled meets the domestic arrival-change threshold. Departure at least three hours earlier can also qualify. Compare timezone-aware scheduled timestamps from the original ticket and replacement offer.\n\n### 3.3 Passenger choice\nRecord whether the passenger requested a refund, declined replacement travel, accepted a credit or traveled. An unanswered offer does not prove acceptance or rejection. Verify delivery and expiry before deciding what response occurred.\n\n### 3.4 Replacement flight already used\nA passenger who flew the replacement generally cannot obtain a full refund for transportation already used under this disruption remedy. Arrival five hours late does not change that rule. Separate remedies for unused travel, downgrade or optional-service fees may still apply.\n\n### 3.5 Final destination, not first-leg delay\nA first flight arriving four hours late does not by itself establish the final-arrival change. A later connection may reduce the difference; a short inbound delay can also cause an overnight arrival change. Without replacement final-arrival information, the significant-change test remains unresolved.\n\n### 3.6 Offer status\nCREATED, DELIVERED, VIEWED, ACCEPTED, DECLINED, EXPIRED and FLOWN describe different events. DELIVERED means a notification reached the passenger's channel, not that they accepted travel. An internally generated voucher or offer does not close a refund request.\n\n### 3.7 Partly used tickets\nIf the passenger flew the first segment but declines qualifying onward travel, assess the unused ticket portion using coupon accounting. Do not promise the entire fare or calculate a dollar amount without ticket-value records. Eligibility and refund amount are separate questions.\n\n### 3.8 Other significant changes\nA changed airport, additional connection or qualifying cabin downgrade may matter even when the arrival difference is under three hours. Compare the original and replacement itineraries before deciding. Duration is not the only qualifying criterion.\n\n",
+          "document_id": "NS-REF-2026",
+          "document_type": "policy",
+          "title": "Flight Disruption Refund Eligibility and Passenger Choice",
+          "version": "2.0",
+          "effective_from": "2026-01-01",
+          "status": "current",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/03_refund_policy_2026.md",
+          "source_checksum": "381046f7b03d3dd44685603fb70d19a6db14a3f605fc1300802f5297122e2683",
+          "section_ids": [
+            "3",
+            "3.1",
+            "3.2",
+            "3.3",
+            "3.4",
+            "3.5",
+            "3.6",
+            "3.7",
+            "3.8"
+          ],
+          "start_char": 1674,
+          "end_char": 4281
+        },
+        {
+          "_id": "ded67467c458276d40049c94b5ba56324b74c1f63747be0f1c00e00851b779f1",
+          "body": "## 1. Scope and required information\nA missed connection does not automatically create a refund entitlement. Assess the change to the whole journey, passenger choice and transportation already used.\n\n### 1.1 Evidence required\nObtain original and replacement final-destination arrival times, cancellation status, ticket coupon usage and the passenger's response to alternatives. A missed connection alone does not prove a significant change or a decision to decline travel. Missing facts should be identified rather than invented.\n\n",
+          "document_id": "NS-REF-2026",
+          "document_type": "policy",
+          "title": "Flight Disruption Refund Eligibility and Passenger Choice",
+          "version": "2.0",
+          "effective_from": "2026-01-01",
+          "status": "current",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/03_refund_policy_2026.md",
+          "source_checksum": "381046f7b03d3dd44685603fb70d19a6db14a3f605fc1300802f5297122e2683",
+          "section_ids": [
+            "1",
+            "1.1"
+          ],
+          "start_char": 331,
+          "end_char": 862
+        },
+        {
+          "_id": "63ea292f32c724e9fbc32b18fcfedcd753dc6236755678209fc556e645ca10d9",
+          "body": "## 3. Meal vouchers\nMeal eligibility depends on the waiting time and approved cause, independently of hotel eligibility.\n\n### 3.1 Three-hour waiting threshold\nProvide a meal voucher after at least three consecutive hours of waiting for onward travel due to a final approved airline-controlled cause. Mechanical, crew and airline-operations disruptions can qualify. Do not count the same waiting interval twice when offers change.\n\n### 3.2 Meal exclusions\nWeather-only and external air-traffic-control delays do not qualify for standard meal vouchers. If the cause is unconfirmed, meal eligibility requires review. Staff may separately authorize courtesy assistance.\n\n",
+          "document_id": "NS-CARE-2026",
+          "document_type": "policy",
+          "title": "Passenger Care, Meal Assistance and Overnight Accommodation",
+          "version": "2.1",
+          "effective_from": "2026-01-01",
+          "status": "current",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/02_passenger_care_2026.md",
+          "source_checksum": "6409ef98d4330b1935632fc22f0fd9eb5f25dae1a81bc1c440fe4a88f44f4b68",
+          "section_ids": [
+            "3",
+            "3.1",
+            "3.2"
+          ],
+          "start_char": 1292,
+          "end_char": 1959
+        },
+        {
+          "_id": "1f90c9f0d1025348dd959a521cd284f0b00dc4f77bb17cef683753d91f7ca209",
+          "body": "## 5. Examples and exceptions\nA passenger who declines a replacement arriving twenty hours late may qualify whether the original disruption was mechanical or weather-related. A passenger who flies that replacement generally cannot obtain a full used-ticket refund under the change remedy. A missed connection alone remains insufficient to decide.\n\n",
+          "document_id": "NS-REF-2026",
+          "document_type": "policy",
+          "title": "Flight Disruption Refund Eligibility and Passenger Choice",
+          "version": "2.0",
+          "effective_from": "2026-01-01",
+          "status": "current",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/03_refund_policy_2026.md",
+          "source_checksum": "381046f7b03d3dd44685603fb70d19a6db14a3f605fc1300802f5297122e2683",
+          "section_ids": [
+            "5"
+          ],
+          "start_char": 4993,
+          "end_char": 5341
+        },
+        {
+          "_id": "ca8344606b461d9a9bf4454e97706c9499aefd96d0c8817acfb5a9728efb0e78",
+          "body": "\n# Disruption Refunds and Passenger Choice \u2014 NS-REF-2026\n\nEffective January 1, 2026. Owner: Ticketing Compliance. This fictional Northstar Air policy describes domestic disruption refunds. It does not replace applicable law or establish another airline's obligations. Rebooking and passenger-care benefits are separate decisions.\n\n",
+          "document_id": "NS-REF-2026",
+          "document_type": "policy",
+          "title": "Flight Disruption Refund Eligibility and Passenger Choice",
+          "version": "2.0",
+          "effective_from": "2026-01-01",
+          "status": "current",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/03_refund_policy_2026.md",
+          "source_checksum": "381046f7b03d3dd44685603fb70d19a6db14a3f605fc1300802f5297122e2683",
+          "section_ids": [],
+          "start_char": 0,
+          "end_char": 331
+        },
+        {
+          "_id": "23e2f30394e250f4f992e32e6886893ee38c3c0534ed21b5959f7fbf2ff49881",
+          "body": "\n# Meals and Overnight Hotels \u2014 NS-CARE-2026\n\nEffective January 1, 2026. Owner: Customer Experience Operations. These are fictional Northstar Air service commitments for disrupted domestic travel, not universal legal rights. Assess meals, hotels, rebooking and refunds separately.\n\n",
+          "document_id": "NS-CARE-2026",
+          "document_type": "policy",
+          "title": "Passenger Care, Meal Assistance and Overnight Accommodation",
+          "version": "2.1",
+          "effective_from": "2026-01-01",
+          "status": "current",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/02_passenger_care_2026.md",
+          "source_checksum": "6409ef98d4330b1935632fc22f0fd9eb5f25dae1a81bc1c440fe4a88f44f4b68",
+          "section_ids": [],
+          "start_char": 0,
+          "end_char": 282
+        },
+        {
+          "_id": "28ecc61d5bee48e522cfe8026dba57e2f69c7de3dcce198404fe1e9e67281942",
+          "body": "## 5. Example\nA gate agent initially reports weather. An authorized investigation later confirms an internal crew scheduling failure after the restriction ended. Use the approved crew classification, retain the original weather observation and reassess any cause-dependent benefit under the applicable policy edition.\n\n",
+          "document_id": "NS-CAUSE-2026",
+          "document_type": "policy",
+          "title": "Disruption Cause Classification and Investigation Standard",
+          "version": "1.4",
+          "effective_from": "2026-01-01",
+          "status": "current",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/04_disruption_classification_2026.md",
+          "source_checksum": "e9cedc796fca2deabc8688f046fb67c88951d2e8c9b661ccc933db8c1c56ba75",
+          "section_ids": [
+            "5"
+          ],
+          "start_char": 4735,
+          "end_char": 5054
+        },
+        {
+          "_id": "b23dbdf47aad1fd515b273c7fe58a5ef1397ba9ef2beb2e79473d5d00d81d7a5",
+          "body": "## 3. Investigation and approval\nUse the latest applicable approved finding. Preserve previous observations so a reviewer can explain why a classification changed.\n\n### 3.1 Preliminary report\nAn initial gate or dispatcher report is PROVISIONAL. It can explain why an investigation is open, but must not independently grant or deny cause-dependent hotel assistance. A confident description is not an approval event.\n\n### 3.2 Cause not yet confirmed\nUNKNOWN, MIXED_PENDING or an open investigation means NEEDS_REVIEW for hotel or meal decisions that depend on controllability. Request the approved cause rather than promising payment or treating uncertainty as a weather exclusion. Rebooking eligibility is assessed separately.\n\n### 3.3 Final finding\nAn authorized analyst must identify the controlling cause, document the reasoning and sign the final revision. A finalized, approved mechanical finding can supersede an earlier provisional weather remark. Verify that the finding concerns the passenger's actual disrupted flight.\n\n### 3.4 Mixed causes\nWhen weather and an internal problem both contributed, identify which cause prevented timely operation during the relevant interval. Do not count keywords or assume any weather mention excludes assistance. Keep MIXED_PENDING when the evidence cannot resolve the controlling cause.\n\n### 3.5 Causal sequence\nWeather may delay an aircraft before a later crew problem prevents departure. A maintenance note may concern a different aircraft after a swap. Compare the chronology and affected segment; the last event mentioned is not necessarily the controlling cause.\n\n### 3.6 Evidence precedence\nThe latest authorized, signed final investigation takes precedence over preliminary gate comments. Preserve the earlier observation, its timestamp and the approved revision explaining the change. Operational timestamps establish when events occurred; they do not by themselves establish why. Never overwrite an earlier record to hide a changed decision.\n\n### 3.7 Timestamp conflicts\nCompare timezone-aware or UTC timestamps from reconciled operational records. A later ingestion time is not proof that an event happened later. If material times conflict, seek review rather than selecting the most convenient value.\n\n### 3.8 Investigation states\nThe lifecycle is REPORTED, INVESTIGATING, PROPOSED and FINAL_APPROVED. PROPOSED is a draft awaiting authorized approval; it cannot override a valid approved finding. REOPENED means new evidence requires review of the earlier result. Keep the status and cause code as separate fields.\n\n",
+          "document_id": "NS-CAUSE-2026",
+          "document_type": "policy",
+          "title": "Disruption Cause Classification and Investigation Standard",
+          "version": "1.4",
+          "effective_from": "2026-01-01",
+          "status": "current",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/04_disruption_classification_2026.md",
+          "source_checksum": "e9cedc796fca2deabc8688f046fb67c88951d2e8c9b661ccc933db8c1c56ba75",
+          "section_ids": [
+            "3",
+            "3.1",
+            "3.2",
+            "3.3",
+            "3.4",
+            "3.5",
+            "3.6",
+            "3.7",
+            "3.8"
+          ],
+          "start_char": 1806,
+          "end_char": 4378
+        },
+        {
+          "_id": "99a6281b565bed733d255cfe5d9c7245a66c385ecd2d6935db23e74248ce2b39",
+          "body": "## 2. Cause codes\nEach code describes the verified cause, not whether a hotel has been booked. Meal and hotel conditions still come from NS-CARE-2026.\n\n### 2.1 Airline-controlled causes\nMECHANICAL means an aircraft defect or maintenance hold under carrier responsibility. CREW_OPERATIONAL means an internal crew scheduling, reserve assignment or staffing problem. AIRLINE_OPERATIONS means carrier-controlled gate, baggage-loading, aircraft rotation or dispatch planning. Approved examples include a confirmed failed component or an internal reserve-assignment error.\n\n### 2.2 Uncontrollable and unresolved causes\nWEATHER means external weather conditions. ATC_EXTERNAL means an external air-traffic restriction. UNKNOWN means verified information is insufficient. MIXED_PENDING means multiple material causes exist and a controlling cause has not been assigned. Unresolved is not the same as uncontrollable.\n\n",
+          "document_id": "NS-CAUSE-2026",
+          "document_type": "policy",
+          "title": "Disruption Cause Classification and Investigation Standard",
+          "version": "1.4",
+          "effective_from": "2026-01-01",
+          "status": "current",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/04_disruption_classification_2026.md",
+          "source_checksum": "e9cedc796fca2deabc8688f046fb67c88951d2e8c9b661ccc933db8c1c56ba75",
+          "section_ids": [
+            "2",
+            "2.1",
+            "2.2"
+          ],
+          "start_char": 897,
+          "end_char": 1806
+        },
+        {
+          "_id": "c2a1c52199a8ca265068a6ed5db74ba556a14c7a112d58d80fb5572cbd313097",
+          "body": "## 2. Rebooking or refund\nExplain both options when a qualifying disruption occurs. A replacement offer must not be presented as the passenger's only remedy.\n\n### 2.1 No-additional-fare rebooking\nNS-CONN-2026 may provide alternative travel for weather or airline-controlled disruptions. An offer, acceptance and completed travel are different states. Accepting an offer does not establish that the passenger actually flew.\n\n### 2.2 Refund instead of alternative travel\nA cancellation or significant itinerary change can qualify for a refund when the passenger declines the changed itinerary and does not accept replacement travel, credit or other compensation. Rejecting an eligible rebooking does not forfeit an otherwise qualifying refund. Check unused transportation separately from the entire ticket value.\n\n",
+          "document_id": "NS-REF-2026",
+          "document_type": "policy",
+          "title": "Flight Disruption Refund Eligibility and Passenger Choice",
+          "version": "2.0",
+          "effective_from": "2026-01-01",
+          "status": "current",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/03_refund_policy_2026.md",
+          "source_checksum": "381046f7b03d3dd44685603fb70d19a6db14a3f605fc1300802f5297122e2683",
+          "section_ids": [
+            "2",
+            "2.1",
+            "2.2"
+          ],
+          "start_char": 862,
+          "end_char": 1674
+        },
+        {
+          "_id": "0f3d3f5a705f27ffc4ef1816d8f81be25b5dea0ec4c5dd8850bc780eb95ea563",
+          "body": "## 5. Escalation\nWhen boarding evidence, ticket linkage or inventory is missing, explain what needs verification. Never claim that a flight has been booked or that compensation has been paid without confirmation.\n\n",
+          "document_id": "NS-CONN-2026",
+          "document_type": "policy",
+          "title": "Connection Protection and Involuntary Rebooking Standard",
+          "version": "2.0",
+          "effective_from": "2026-01-01",
+          "status": "current",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/01_connection_protection_2026.md",
+          "source_checksum": "5e2b5ec0ca31de04d6b0e5e96d1229daddfbb9c0d4f69543df64c2c1b42319e2",
+          "section_ids": [
+            "5"
+          ],
+          "start_char": 4183,
+          "end_char": 4397
+        },
+        {
+          "_id": "0c6bcc91c2a942ba156c242e9b3a5565fab148b5892a429dd234846f39a762d6",
+          "body": "## 4. Applying the cause\nMechanical, crew-operational and airline-operations causes can satisfy the current hotel controllability requirement, but overnight necessity and residence conditions still apply. Weather and external ATC do not satisfy standard care coverage. Cause is not a prerequisite for protected rebooking or a qualifying disruption refund.\n\n",
+          "document_id": "NS-CAUSE-2026",
+          "document_type": "policy",
+          "title": "Disruption Cause Classification and Investigation Standard",
+          "version": "1.4",
+          "effective_from": "2026-01-01",
+          "status": "current",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/04_disruption_classification_2026.md",
+          "source_checksum": "e9cedc796fca2deabc8688f046fb67c88951d2e8c9b661ccc933db8c1c56ba75",
+          "section_ids": [
+            "4"
+          ],
+          "start_char": 4378,
+          "end_char": 4735
+        },
+        {
+          "_id": "dd796d5817e95550610577fa8699695fd880513aafb890fccbca65f86bcc3f08",
+          "body": "## 2. Basic assistance\nExplain the flight status, feasible recovery options and any information still needed. Discretionary assistance must be recorded as COURTESY rather than a standard entitlement. A service offer does not certify that it was delivered.\n\n",
+          "document_id": "NS-CARE-2026",
+          "document_type": "policy",
+          "title": "Passenger Care, Meal Assistance and Overnight Accommodation",
+          "version": "2.1",
+          "effective_from": "2026-01-01",
+          "status": "current",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/02_passenger_care_2026.md",
+          "source_checksum": "6409ef98d4330b1935632fc22f0fd9eb5f25dae1a81bc1c440fe4a88f44f4b68",
+          "section_ids": [
+            "2"
+          ],
+          "start_char": 1035,
+          "end_char": 1292
+        },
+        {
+          "_id": "1943780b07f50944a0aaeacac16bdc7c087589f90bef186322baf217c07b3dae",
+          "body": "## 4. Passenger care\nA free rebooking does not automatically include meals or a hotel. Assess approved cause, waiting time, overnight necessity and residence under NS-CARE-2026.\n\n",
+          "document_id": "NS-CONN-2026",
+          "document_type": "policy",
+          "title": "Connection Protection and Involuntary Rebooking Standard",
+          "version": "2.0",
+          "effective_from": "2026-01-01",
+          "status": "current",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/01_connection_protection_2026.md",
+          "source_checksum": "5e2b5ec0ca31de04d6b0e5e96d1229daddfbb9c0d4f69543df64c2c1b42319e2",
+          "section_ids": [
+            "4"
+          ],
+          "start_char": 4004,
+          "end_char": 4183
+        }
+      ],
+      "answer": {
+        "answer": "Under the current policy (NS-CARE-2026 v2.1, effective 2026-01-01), it is a standard benefit, not a discretionary courtesy. A finalized CREW_OPERATIONAL (internal crew scheduling/staffing) disruption is an airline-controlled cause and is expressly included in current hotel coverage since January 1, 2026. Northstar provides an approved hotel when all four \u00a74.1 conditions hold together: a valid disrupted Northstar itinerary; a final approved airline-controlled cause; onward travel requiring an overnight wait at the affected airport (no reasonable option completable before the next calendar day); and the passenger being away from their verified home metro area \u2014 residence must be verified, not inferred from billing address or trip origin. Courtesy status (recorded as COURTESY) applies only to discretionary assistance outside these rules. Note that eligibility is separate from fulfillment: a voucher must still be authorized and issued, and full partner hotels do not remove eligibility.",
+        "citations": [
+          "NS-CARE-2026#4.1",
+          "NS-CARE-2026#4.5",
+          "NS-CARE-2026#4.2",
+          "NS-CARE-2026#4.3",
+          "NS-CARE-2026#4.9",
+          "NS-CARE-2026#4.8",
+          "NS-CARE-2026#2",
+          "NS-CARE-2026#1.2",
+          "NS-CAUSE-2026#2.1",
+          "NS-CAUSE-2026#4"
+        ],
+        "missing_information": []
+      }
+    },
+    "corrected_live": {
+      "namespace": "part6-compact-corrected-v1",
+      "evidence": [
+        {
+          "_id": "17abb68359e3e93bc75fd46cf97d42d829c01893334bf7db53b86cd48057c060",
+          "body": "## 2. Rebooking and passenger choice\nRebooking eligibility, an available offer and a confirmed ticket are different stages. Staff must explain which stage has actually been reached.\n\n### 2.1 No-additional-fare rebooking\nFor a verified protected missed connection, Northstar offers the earliest available Northstar-operated itinerary to the original destination at no additional fare. This applies to weather and other uncontrollable causes as well as mechanical, crew and airline-operations disruptions. Seat availability must be confirmed; no particular departure time is guaranteed.\n\n### 2.2 Available alternatives\nSearch feasible same-day service, later connections and then next-day travel, considering the passenger's documented needs. A search result or temporary seat hold is not a confirmed reservation. External-carrier transfers require separate approval.\n\n### 2.3 Passenger decision\nRecord an offer as OFFERED, ACCEPTED, DECLINED or EXPIRED, including its timestamp and notification channel. Expiry or silence does not prove acceptance. A passenger may decline an alternative without losing an otherwise qualifying refund option.\n\n### 2.4 Boarding feasibility\nAn aircraft still at the gate may already be closed for boarding. Use recorded boarding events and realistic transfer constraints, rather than scheduled departure alone. Escalate conflicting timestamps instead of guessing.\n\n### 2.5 Offer versus confirmed booking\nA text offering another flight does not mean the passenger is booked. Distinguish SEARCHED, OFFERED, ACCEPTED, TICKETED and FLOWN. Confirmation requires an actual ticketed reservation. If no seats are available, record NO_CURRENT_INVENTORY: recovery eligibility remains, but transport is not confirmed.\n\n### 2.6 Changed routing\nA different airport, additional connection or substantial arrival change may affect refund eligibility. Check accessibility needs before presenting a routing as suitable. Fare price alone does not establish suitability.\n\n### 2.7 Required information\nRecord the original ticket, affected segments, boarding and arrival times, available alternatives, passenger choice and applicable policy version. An unresolved cause does not prevent protected rebooking; cause matters separately for passenger care.\n\n### 2.8 Conflicting messages\nA gate agent, app and phone agent may show different inventory snapshots. Identify the current offer and whether a ticket exists. Multiple messages are not multiple confirmed bookings. Tell the passenger which offer replaced an earlier proposal.\n\n",
+          "document_id": "NS-CONN-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 3732.0,
+          "section_ids": [
+            "2",
+            "2.1",
+            "2.2",
+            "2.3",
+            "2.4",
+            "2.5",
+            "2.6",
+            "2.7",
+            "2.8"
+          ],
+          "source_checksum": "5e2b5ec0ca31de04d6b0e5e96d1229daddfbb9c0d4f69543df64c2c1b42319e2",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/01_connection_protection_2026.md",
+          "start_char": 1193.0,
+          "status": "current",
+          "title": "Connection Protection and Involuntary Rebooking Standard",
+          "version": "2.0"
+        },
+        {
+          "_id": "8b84448a231689e30add1dac1902ae8eb90399e388d4bb3bdeb7ee1da166d370",
+          "body": "## 1. Protected connections\nA missed connection and a refund are separate decisions. Use this policy for replacement travel and NS-REF-2026 for refunds. Hotel assistance is assessed separately under NS-CARE-2026.\n\n### 1.1 Covered transportation\nA protected itinerary has at least two domestic Northstar-operated flights on the same ticket and reservation, sold as one continuous journey. The first flight must be disrupted before the onward flight's boarding cutoff. Separate tickets, codeshares, interline travel and international itineraries are outside this policy; refer those passengers to a specialist.\n\n### 1.2 Confirming a missed connection\nCompare actual inbound gate arrival, required transfer time and the onward boarding cutoff. A delayed inbound flight does not prove a missed connection if onward boarding remains open. Missing or contradictory operational times require review.\n\n",
+          "document_id": "NS-CONN-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 1193.0,
+          "section_ids": [
+            "1",
+            "1.1",
+            "1.2"
+          ],
+          "source_checksum": "5e2b5ec0ca31de04d6b0e5e96d1229daddfbb9c0d4f69543df64c2c1b42319e2",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/01_connection_protection_2026.md",
+          "start_char": 299.0,
+          "status": "current",
+          "title": "Connection Protection and Involuntary Rebooking Standard",
+          "version": "2.0"
+        },
+        {
+          "_id": "800231a190d66aa3a503bbaf0d05a3a13c085f086a54a9d78cf803b63725636b",
+          "body": "## 4. Overnight accommodation\nDetermine eligibility before arranging or reimbursing a room. An overnight delay alone is insufficient.\n\n### 4.1 Primary hotel eligibility\nNorthstar provides an approved hotel when all four conditions hold: a valid disrupted Northstar itinerary; a final approved airline-controlled cause; onward travel requiring an overnight wait at the affected airport; and a passenger away from their verified home metro area. All conditions are required together.\n\n### 4.2 Overnight necessity\nAn overnight wait means no reasonable onward option can be completed without staying at the recovery station into the following calendar day. Use feasible flight options and boarding constraints. A late departure or device date change alone does not establish overnight necessity.\n\n### 4.3 Home-city restriction\nA passenger stranded at an airport within their own home metro area is not eligible for the standard hotel. This applies even if their trip began elsewhere. Missing residence information requires review.\n\n### 4.4 Weather, external ATC and unresolved causes\nWeather and external ATC disruptions do not qualify for standard hotel coverage. UNKNOWN, MIXED_PENDING or an investigation still in progress means NEEDS_REVIEW; do not promise payment or assume the cause is uncontrollable.\n\n### 4.5 Crew scheduling coverage\nA finalized CREW_OPERATIONAL disruption is included in current hotel coverage. A crew shortage or rotation problem can qualify when the overnight, away-from-home and valid-itinerary conditions in \u00a74.1 also hold. This inclusion took effect January 1, 2026.\n\n### 4.6 Self-booked hotels and written authorization\nNorthstar normally issues an approved hotel voucher. Before booking independently, obtain written authorization stating the maximum reimbursable rate and approved dates. A receipt or verbal suggestion alone does not establish reimbursement approval.\n\n### 4.7 Approved cause controls\nThe latest authorized, approved final investigation controls eligibility, even if a gate announcement initially said weather. A later unapproved draft cannot override an approved finding. Consult NS-CAUSE-2026 for investigation states.\n\n### 4.8 Eligibility versus fulfillment\nFull partner hotels do not remove eligibility. Record fulfillment separately as NOT_REQUESTED, SEARCHING, VOUCHER_AUTHORIZED, VOUCHER_ISSUED, RECEIPT_PENDING or CLOSED. Authorization is not proof of an issued voucher or booked room. Arrange alternative approved accommodation or escalate capacity problems.\n\n### 4.9 Residence verification\nDo not substitute billing address, nationality, telephone area code or trip origin for verified residence. Conflicting residence sources require authorized verification before deciding the home-metro condition.\n\n",
+          "document_id": "NS-CARE-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 4717.0,
+          "section_ids": [
+            "4",
+            "4.1",
+            "4.2",
+            "4.3",
+            "4.4",
+            "4.5",
+            "4.6",
+            "4.7",
+            "4.8",
+            "4.9"
+          ],
+          "source_checksum": "6409ef98d4330b1935632fc22f0fd9eb5f25dae1a81bc1c440fe4a88f44f4b68",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/02_passenger_care_2026.md",
+          "start_char": 1959.0,
+          "status": "current",
+          "title": "Passenger Care, Meal Assistance and Overnight Accommodation",
+          "version": "2.1"
+        },
+        {
+          "_id": "1edfd2ea7288e9f147d94fbc1623a10603d6c3897eb7747032ae007d1a203e86",
+          "body": "## 1. Coverage and definitions\nUse the policy effective on the disruption date. A passenger asking about today's benefits should receive the current rule, while a historical claim uses the edition in force at that time.\n\n### 1.1 Covered passengers\nThe passenger must hold a valid disrupted Northstar itinerary and be present at the affected airport. Protected rebooking is governed separately by NS-CONN-2026.\n\n### 1.2 Airline-controlled causes and home metro\nMECHANICAL, CREW_OPERATIONAL and AIRLINE_OPERATIONS are airline-controlled causes. WEATHER and ATC_EXTERNAL are uncontrollable. UNKNOWN and MIXED_PENDING are unresolved. Home metro means the passenger's verified metropolitan area of residence, not their payment address or departure airport.\n\n",
+          "document_id": "NS-CARE-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 1035.0,
+          "section_ids": [
+            "1",
+            "1.1",
+            "1.2"
+          ],
+          "source_checksum": "6409ef98d4330b1935632fc22f0fd9eb5f25dae1a81bc1c440fe4a88f44f4b68",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/02_passenger_care_2026.md",
+          "start_char": 282.0,
+          "status": "current",
+          "title": "Passenger Care, Meal Assistance and Overnight Accommodation",
+          "version": "2.1"
+        },
+        {
+          "_id": "ad67c8b5261c52989a4273b0c701bd745ddc0c59b1a5e3edcf39b2c0163a38e9",
+          "body": "## 6. Scope examples\nA weather-delayed passenger on one protected Northstar ticket may qualify for no-additional-fare rebooking. A traveler on two separately purchased tickets is outside protected-connection coverage and needs specialist review. Neither example alone determines hotel or refund eligibility.\n",
+          "document_id": "NS-CONN-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 4705.0,
+          "section_ids": [
+            "6"
+          ],
+          "source_checksum": "5e2b5ec0ca31de04d6b0e5e96d1229daddfbb9c0d4f69543df64c2c1b42319e2",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/01_connection_protection_2026.md",
+          "start_char": 4397.0,
+          "status": "current",
+          "title": "Connection Protection and Involuntary Rebooking Standard",
+          "version": "2.0"
+        },
+        {
+          "_id": "750ab844d99d196b9ec926f68d4264625cceaa16e91ff1fd0d5da06bca3d63e6",
+          "body": "## 4. Amount and processing\nAn eligibility decision does not establish that payment has been made. Explain any missing accounting or payment information.\n\n### 4.1 Unused value\nAn entirely unused qualifying ticket may receive a full refund. For partly used tickets, calculate unused transportation and eligible fees from accounting records. Do not estimate value from distance or delay length.\n\n### 4.2 Payment method and timing\nReturn eligible refunds to the original payment method. Northstar's processing targets are seven business days for credit-card payments and twenty calendar days for other methods after the verified trigger. Missing payment method or trigger date prevents a promised completion date.\n\n",
+          "document_id": "NS-REF-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 4993.0,
+          "section_ids": [
+            "4",
+            "4.1",
+            "4.2"
+          ],
+          "source_checksum": "381046f7b03d3dd44685603fb70d19a6db14a3f605fc1300802f5297122e2683",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/03_refund_policy_2026.md",
+          "start_char": 4281.0,
+          "status": "current",
+          "title": "Flight Disruption Refund Eligibility and Passenger Choice",
+          "version": "2.0"
+        },
+        {
+          "_id": "f37dde43f000da84cf79382cd21384577e7e5ac5b1f51a2e90e579fc6e565d7d",
+          "body": "\n# Connection Protection and Rebooking \u2014 NS-CONN-2026\n\nEffective January 1, 2026. Owner: Customer Operations. This fictional Northstar Air policy covers domestic protected connections. It describes recovery eligibility; an eligible passenger still needs a confirmed seat before travel is arranged.\n\n",
+          "document_id": "NS-CONN-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 299.0,
+          "section_ids": [],
+          "source_checksum": "5e2b5ec0ca31de04d6b0e5e96d1229daddfbb9c0d4f69543df64c2c1b42319e2",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/01_connection_protection_2026.md",
+          "start_char": 0.0,
+          "status": "current",
+          "title": "Connection Protection and Involuntary Rebooking Standard",
+          "version": "2.0"
+        },
+        {
+          "_id": "775aeaada26be9e29f8ad27ccd501370bdfd124ea237119d8521363806265cbd",
+          "body": "## 3. Refund alternative\nA missed connection does not automatically create a refund. Check cancellation or significant itinerary change and the passenger's decision under NS-REF-2026. Completed replacement travel generally prevents a full refund for transportation used.\n\n",
+          "document_id": "NS-CONN-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 4004.0,
+          "section_ids": [
+            "3"
+          ],
+          "source_checksum": "5e2b5ec0ca31de04d6b0e5e96d1229daddfbb9c0d4f69543df64c2c1b42319e2",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/01_connection_protection_2026.md",
+          "start_char": 3732.0,
+          "status": "current",
+          "title": "Connection Protection and Involuntary Rebooking Standard",
+          "version": "2.0"
+        },
+        {
+          "_id": "72bce978d3c40d5de81d430e98a34c8da29d48a1d4ea145756021680a452d380",
+          "body": "## 3. Qualifying disruption and passenger decision\nThe approved cause does not determine whether a cancellation or significant itinerary change qualifies. Weather-related changes can qualify just as airline-controlled changes can.\n\n### 3.1 Cancellation\nA canceled covered flight qualifies for assessment when the passenger declines substitute travel. Do not treat an ordinary delay as a cancellation. Verify the carrier's actual flight status.\n\n### 3.2 Domestic significant-change threshold\nA replacement scheduled to arrive at the final destination at least three hours later than originally scheduled meets the domestic arrival-change threshold. Departure at least three hours earlier can also qualify. Compare timezone-aware scheduled timestamps from the original ticket and replacement offer.\n\n### 3.3 Passenger choice\nRecord whether the passenger requested a refund, declined replacement travel, accepted a credit or traveled. An unanswered offer does not prove acceptance or rejection. Verify delivery and expiry before deciding what response occurred.\n\n### 3.4 Replacement flight already used\nA passenger who flew the replacement generally cannot obtain a full refund for transportation already used under this disruption remedy. Arrival five hours late does not change that rule. Separate remedies for unused travel, downgrade or optional-service fees may still apply.\n\n### 3.5 Final destination, not first-leg delay\nA first flight arriving four hours late does not by itself establish the final-arrival change. A later connection may reduce the difference; a short inbound delay can also cause an overnight arrival change. Without replacement final-arrival information, the significant-change test remains unresolved.\n\n### 3.6 Offer status\nCREATED, DELIVERED, VIEWED, ACCEPTED, DECLINED, EXPIRED and FLOWN describe different events. DELIVERED means a notification reached the passenger's channel, not that they accepted travel. An internally generated voucher or offer does not close a refund request.\n\n### 3.7 Partly used tickets\nIf the passenger flew the first segment but declines qualifying onward travel, assess the unused ticket portion using coupon accounting. Do not promise the entire fare or calculate a dollar amount without ticket-value records. Eligibility and refund amount are separate questions.\n\n### 3.8 Other significant changes\nA changed airport, additional connection or qualifying cabin downgrade may matter even when the arrival difference is under three hours. Compare the original and replacement itineraries before deciding. Duration is not the only qualifying criterion.\n\n",
+          "document_id": "NS-REF-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 4281.0,
+          "section_ids": [
+            "3",
+            "3.1",
+            "3.2",
+            "3.3",
+            "3.4",
+            "3.5",
+            "3.6",
+            "3.7",
+            "3.8"
+          ],
+          "source_checksum": "381046f7b03d3dd44685603fb70d19a6db14a3f605fc1300802f5297122e2683",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/03_refund_policy_2026.md",
+          "start_char": 1674.0,
+          "status": "current",
+          "title": "Flight Disruption Refund Eligibility and Passenger Choice",
+          "version": "2.0"
+        },
+        {
+          "_id": "ded67467c458276d40049c94b5ba56324b74c1f63747be0f1c00e00851b779f1",
+          "body": "## 1. Scope and required information\nA missed connection does not automatically create a refund entitlement. Assess the change to the whole journey, passenger choice and transportation already used.\n\n### 1.1 Evidence required\nObtain original and replacement final-destination arrival times, cancellation status, ticket coupon usage and the passenger's response to alternatives. A missed connection alone does not prove a significant change or a decision to decline travel. Missing facts should be identified rather than invented.\n\n",
+          "document_id": "NS-REF-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 862.0,
+          "section_ids": [
+            "1",
+            "1.1"
+          ],
+          "source_checksum": "381046f7b03d3dd44685603fb70d19a6db14a3f605fc1300802f5297122e2683",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/03_refund_policy_2026.md",
+          "start_char": 331.0,
+          "status": "current",
+          "title": "Flight Disruption Refund Eligibility and Passenger Choice",
+          "version": "2.0"
+        },
+        {
+          "_id": "63ea292f32c724e9fbc32b18fcfedcd753dc6236755678209fc556e645ca10d9",
+          "body": "## 3. Meal vouchers\nMeal eligibility depends on the waiting time and approved cause, independently of hotel eligibility.\n\n### 3.1 Three-hour waiting threshold\nProvide a meal voucher after at least three consecutive hours of waiting for onward travel due to a final approved airline-controlled cause. Mechanical, crew and airline-operations disruptions can qualify. Do not count the same waiting interval twice when offers change.\n\n### 3.2 Meal exclusions\nWeather-only and external air-traffic-control delays do not qualify for standard meal vouchers. If the cause is unconfirmed, meal eligibility requires review. Staff may separately authorize courtesy assistance.\n\n",
+          "document_id": "NS-CARE-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 1959.0,
+          "section_ids": [
+            "3",
+            "3.1",
+            "3.2"
+          ],
+          "source_checksum": "6409ef98d4330b1935632fc22f0fd9eb5f25dae1a81bc1c440fe4a88f44f4b68",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/02_passenger_care_2026.md",
+          "start_char": 1292.0,
+          "status": "current",
+          "title": "Passenger Care, Meal Assistance and Overnight Accommodation",
+          "version": "2.1"
+        },
+        {
+          "_id": "1f90c9f0d1025348dd959a521cd284f0b00dc4f77bb17cef683753d91f7ca209",
+          "body": "## 5. Examples and exceptions\nA passenger who declines a replacement arriving twenty hours late may qualify whether the original disruption was mechanical or weather-related. A passenger who flies that replacement generally cannot obtain a full used-ticket refund under the change remedy. A missed connection alone remains insufficient to decide.\n\n",
+          "document_id": "NS-REF-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 5341.0,
+          "section_ids": [
+            "5"
+          ],
+          "source_checksum": "381046f7b03d3dd44685603fb70d19a6db14a3f605fc1300802f5297122e2683",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/03_refund_policy_2026.md",
+          "start_char": 4993.0,
+          "status": "current",
+          "title": "Flight Disruption Refund Eligibility and Passenger Choice",
+          "version": "2.0"
+        },
+        {
+          "_id": "ca8344606b461d9a9bf4454e97706c9499aefd96d0c8817acfb5a9728efb0e78",
+          "body": "\n# Disruption Refunds and Passenger Choice \u2014 NS-REF-2026\n\nEffective January 1, 2026. Owner: Ticketing Compliance. This fictional Northstar Air policy describes domestic disruption refunds. It does not replace applicable law or establish another airline's obligations. Rebooking and passenger-care benefits are separate decisions.\n\n",
+          "document_id": "NS-REF-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 331.0,
+          "section_ids": [],
+          "source_checksum": "381046f7b03d3dd44685603fb70d19a6db14a3f605fc1300802f5297122e2683",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/03_refund_policy_2026.md",
+          "start_char": 0.0,
+          "status": "current",
+          "title": "Flight Disruption Refund Eligibility and Passenger Choice",
+          "version": "2.0"
+        },
+        {
+          "_id": "23e2f30394e250f4f992e32e6886893ee38c3c0534ed21b5959f7fbf2ff49881",
+          "body": "\n# Meals and Overnight Hotels \u2014 NS-CARE-2026\n\nEffective January 1, 2026. Owner: Customer Experience Operations. These are fictional Northstar Air service commitments for disrupted domestic travel, not universal legal rights. Assess meals, hotels, rebooking and refunds separately.\n\n",
+          "document_id": "NS-CARE-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 282.0,
+          "section_ids": [],
+          "source_checksum": "6409ef98d4330b1935632fc22f0fd9eb5f25dae1a81bc1c440fe4a88f44f4b68",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/02_passenger_care_2026.md",
+          "start_char": 0.0,
+          "status": "current",
+          "title": "Passenger Care, Meal Assistance and Overnight Accommodation",
+          "version": "2.1"
+        },
+        {
+          "_id": "28ecc61d5bee48e522cfe8026dba57e2f69c7de3dcce198404fe1e9e67281942",
+          "body": "## 5. Example\nA gate agent initially reports weather. An authorized investigation later confirms an internal crew scheduling failure after the restriction ended. Use the approved crew classification, retain the original weather observation and reassess any cause-dependent benefit under the applicable policy edition.\n\n",
+          "document_id": "NS-CAUSE-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 5054.0,
+          "section_ids": [
+            "5"
+          ],
+          "source_checksum": "e9cedc796fca2deabc8688f046fb67c88951d2e8c9b661ccc933db8c1c56ba75",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/04_disruption_classification_2026.md",
+          "start_char": 4735.0,
+          "status": "current",
+          "title": "Disruption Cause Classification and Investigation Standard",
+          "version": "1.4"
+        },
+        {
+          "_id": "b23dbdf47aad1fd515b273c7fe58a5ef1397ba9ef2beb2e79473d5d00d81d7a5",
+          "body": "## 3. Investigation and approval\nUse the latest applicable approved finding. Preserve previous observations so a reviewer can explain why a classification changed.\n\n### 3.1 Preliminary report\nAn initial gate or dispatcher report is PROVISIONAL. It can explain why an investigation is open, but must not independently grant or deny cause-dependent hotel assistance. A confident description is not an approval event.\n\n### 3.2 Cause not yet confirmed\nUNKNOWN, MIXED_PENDING or an open investigation means NEEDS_REVIEW for hotel or meal decisions that depend on controllability. Request the approved cause rather than promising payment or treating uncertainty as a weather exclusion. Rebooking eligibility is assessed separately.\n\n### 3.3 Final finding\nAn authorized analyst must identify the controlling cause, document the reasoning and sign the final revision. A finalized, approved mechanical finding can supersede an earlier provisional weather remark. Verify that the finding concerns the passenger's actual disrupted flight.\n\n### 3.4 Mixed causes\nWhen weather and an internal problem both contributed, identify which cause prevented timely operation during the relevant interval. Do not count keywords or assume any weather mention excludes assistance. Keep MIXED_PENDING when the evidence cannot resolve the controlling cause.\n\n### 3.5 Causal sequence\nWeather may delay an aircraft before a later crew problem prevents departure. A maintenance note may concern a different aircraft after a swap. Compare the chronology and affected segment; the last event mentioned is not necessarily the controlling cause.\n\n### 3.6 Evidence precedence\nThe latest authorized, signed final investigation takes precedence over preliminary gate comments. Preserve the earlier observation, its timestamp and the approved revision explaining the change. Operational timestamps establish when events occurred; they do not by themselves establish why. Never overwrite an earlier record to hide a changed decision.\n\n### 3.7 Timestamp conflicts\nCompare timezone-aware or UTC timestamps from reconciled operational records. A later ingestion time is not proof that an event happened later. If material times conflict, seek review rather than selecting the most convenient value.\n\n### 3.8 Investigation states\nThe lifecycle is REPORTED, INVESTIGATING, PROPOSED and FINAL_APPROVED. PROPOSED is a draft awaiting authorized approval; it cannot override a valid approved finding. REOPENED means new evidence requires review of the earlier result. Keep the status and cause code as separate fields.\n\n",
+          "document_id": "NS-CAUSE-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 4378.0,
+          "section_ids": [
+            "3",
+            "3.1",
+            "3.2",
+            "3.3",
+            "3.4",
+            "3.5",
+            "3.6",
+            "3.7",
+            "3.8"
+          ],
+          "source_checksum": "e9cedc796fca2deabc8688f046fb67c88951d2e8c9b661ccc933db8c1c56ba75",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/04_disruption_classification_2026.md",
+          "start_char": 1806.0,
+          "status": "current",
+          "title": "Disruption Cause Classification and Investigation Standard",
+          "version": "1.4"
+        },
+        {
+          "_id": "99a6281b565bed733d255cfe5d9c7245a66c385ecd2d6935db23e74248ce2b39",
+          "body": "## 2. Cause codes\nEach code describes the verified cause, not whether a hotel has been booked. Meal and hotel conditions still come from NS-CARE-2026.\n\n### 2.1 Airline-controlled causes\nMECHANICAL means an aircraft defect or maintenance hold under carrier responsibility. CREW_OPERATIONAL means an internal crew scheduling, reserve assignment or staffing problem. AIRLINE_OPERATIONS means carrier-controlled gate, baggage-loading, aircraft rotation or dispatch planning. Approved examples include a confirmed failed component or an internal reserve-assignment error.\n\n### 2.2 Uncontrollable and unresolved causes\nWEATHER means external weather conditions. ATC_EXTERNAL means an external air-traffic restriction. UNKNOWN means verified information is insufficient. MIXED_PENDING means multiple material causes exist and a controlling cause has not been assigned. Unresolved is not the same as uncontrollable.\n\n",
+          "document_id": "NS-CAUSE-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 1806.0,
+          "section_ids": [
+            "2",
+            "2.1",
+            "2.2"
+          ],
+          "source_checksum": "e9cedc796fca2deabc8688f046fb67c88951d2e8c9b661ccc933db8c1c56ba75",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/04_disruption_classification_2026.md",
+          "start_char": 897.0,
+          "status": "current",
+          "title": "Disruption Cause Classification and Investigation Standard",
+          "version": "1.4"
+        },
+        {
+          "_id": "c2a1c52199a8ca265068a6ed5db74ba556a14c7a112d58d80fb5572cbd313097",
+          "body": "## 2. Rebooking or refund\nExplain both options when a qualifying disruption occurs. A replacement offer must not be presented as the passenger's only remedy.\n\n### 2.1 No-additional-fare rebooking\nNS-CONN-2026 may provide alternative travel for weather or airline-controlled disruptions. An offer, acceptance and completed travel are different states. Accepting an offer does not establish that the passenger actually flew.\n\n### 2.2 Refund instead of alternative travel\nA cancellation or significant itinerary change can qualify for a refund when the passenger declines the changed itinerary and does not accept replacement travel, credit or other compensation. Rejecting an eligible rebooking does not forfeit an otherwise qualifying refund. Check unused transportation separately from the entire ticket value.\n\n",
+          "document_id": "NS-REF-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 1674.0,
+          "section_ids": [
+            "2",
+            "2.1",
+            "2.2"
+          ],
+          "source_checksum": "381046f7b03d3dd44685603fb70d19a6db14a3f605fc1300802f5297122e2683",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/03_refund_policy_2026.md",
+          "start_char": 862.0,
+          "status": "current",
+          "title": "Flight Disruption Refund Eligibility and Passenger Choice",
+          "version": "2.0"
+        },
+        {
+          "_id": "0f3d3f5a705f27ffc4ef1816d8f81be25b5dea0ec4c5dd8850bc780eb95ea563",
+          "body": "## 5. Escalation\nWhen boarding evidence, ticket linkage or inventory is missing, explain what needs verification. Never claim that a flight has been booked or that compensation has been paid without confirmation.\n\n",
+          "document_id": "NS-CONN-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 4397.0,
+          "section_ids": [
+            "5"
+          ],
+          "source_checksum": "5e2b5ec0ca31de04d6b0e5e96d1229daddfbb9c0d4f69543df64c2c1b42319e2",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/01_connection_protection_2026.md",
+          "start_char": 4183.0,
+          "status": "current",
+          "title": "Connection Protection and Involuntary Rebooking Standard",
+          "version": "2.0"
+        },
+        {
+          "_id": "0c6bcc91c2a942ba156c242e9b3a5565fab148b5892a429dd234846f39a762d6",
+          "body": "## 4. Applying the cause\nMechanical, crew-operational and airline-operations causes can satisfy the current hotel controllability requirement, but overnight necessity and residence conditions still apply. Weather and external ATC do not satisfy standard care coverage. Cause is not a prerequisite for protected rebooking or a qualifying disruption refund.\n\n",
+          "document_id": "NS-CAUSE-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 4735.0,
+          "section_ids": [
+            "4"
+          ],
+          "source_checksum": "e9cedc796fca2deabc8688f046fb67c88951d2e8c9b661ccc933db8c1c56ba75",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/04_disruption_classification_2026.md",
+          "start_char": 4378.0,
+          "status": "current",
+          "title": "Disruption Cause Classification and Investigation Standard",
+          "version": "1.4"
+        },
+        {
+          "_id": "dd796d5817e95550610577fa8699695fd880513aafb890fccbca65f86bcc3f08",
+          "body": "## 2. Basic assistance\nExplain the flight status, feasible recovery options and any information still needed. Discretionary assistance must be recorded as COURTESY rather than a standard entitlement. A service offer does not certify that it was delivered.\n\n",
+          "document_id": "NS-CARE-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 1292.0,
+          "section_ids": [
+            "2"
+          ],
+          "source_checksum": "6409ef98d4330b1935632fc22f0fd9eb5f25dae1a81bc1c440fe4a88f44f4b68",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/02_passenger_care_2026.md",
+          "start_char": 1035.0,
+          "status": "current",
+          "title": "Passenger Care, Meal Assistance and Overnight Accommodation",
+          "version": "2.1"
+        },
+        {
+          "_id": "1943780b07f50944a0aaeacac16bdc7c087589f90bef186322baf217c07b3dae",
+          "body": "## 4. Passenger care\nA free rebooking does not automatically include meals or a hotel. Assess approved cause, waiting time, overnight necessity and residence under NS-CARE-2026.\n\n",
+          "document_id": "NS-CONN-2026",
+          "document_type": "policy",
+          "effective_from": "2026-01-01",
+          "end_char": 4183.0,
+          "section_ids": [
+            "4"
+          ],
+          "source_checksum": "5e2b5ec0ca31de04d6b0e5e96d1229daddfbb9c0d4f69543df64c2c1b42319e2",
+          "source_kind": "synthetic",
+          "source_path": "corpus/policies/01_connection_protection_2026.md",
+          "start_char": 4004.0,
+          "status": "current",
+          "title": "Connection Protection and Involuntary Rebooking Standard",
+          "version": "2.0"
+        }
+      ],
+      "answer": {
+        "answer": "Under the current edition (NS-CARE-2026 v2.1, effective 2026-01-01), the hotel is a standard benefit, not a discretionary courtesy, when all four \u00a74.1 conditions hold together: a valid disrupted Northstar itinerary; a final approved airline-controlled cause; onward travel requiring an overnight wait at the affected airport; and the passenger away from their verified home metro area. Crew scheduling is explicitly included: a finalized CREW_OPERATIONAL disruption qualifies under current coverage, an inclusion effective January 1, 2026 (\u00a74.5; NS-CAUSE-2026 \u00a72.1, \u00a74). \"Finalized\" means an authorized, signed FINAL_APPROVED finding, not a provisional gate remark or a PROPOSED draft (NS-CAUSE-2026 \u00a73.1, \u00a73.3, \u00a73.8). Discretionary help is recorded as COURTESY only where no entitlement exists (\u00a72). Eligibility is separate from fulfillment: authorization is not an issued voucher or booked room (\u00a74.8), and self-booking requires prior written authorization of rate and dates (\u00a74.6). Waiting three or more hours also supports a meal voucher (\u00a73.1).",
+        "citations": [
+          "NS-CARE-2026#4.1",
+          "NS-CARE-2026#4.5",
+          "NS-CARE-2026#4.2",
+          "NS-CARE-2026#4.3",
+          "NS-CARE-2026#4.6",
+          "NS-CARE-2026#4.8",
+          "NS-CARE-2026#2",
+          "NS-CARE-2026#3.1",
+          "NS-CAUSE-2026#2.1",
+          "NS-CAUSE-2026#3.1",
+          "NS-CAUSE-2026#3.3",
+          "NS-CAUSE-2026#3.8",
+          "NS-CAUSE-2026#4"
+        ],
+        "missing_information": []
+      }
+    }
+  },
+  "original_status_probe_scope": "The three status-only probes below used the earlier longer corpus. The main before/after stages use the compact source snapshots."
+}
