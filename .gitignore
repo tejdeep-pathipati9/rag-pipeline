@@ -227,13 +227,17 @@ __marimo__/
 .env.*
 !.env.example
 artifacts/runs/
+/artifacts/*.json
 .cache/
 
 # Publish the active benchmark. Keep local copies and older fixtures out of Git.
 /evaluation/*
 !/evaluation/flight_disruption_gold_set.jsonl
+!/evaluation/policy_qa_recorded.json
 
 # Markdown Files
 PLAN.md
 assignment.md
 /IMPROVEMENTS.md
+
+**/archive/
