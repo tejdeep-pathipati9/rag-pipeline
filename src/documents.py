@@ -15,17 +15,7 @@ from markdown_it import MarkdownIt
 
 REQUIRED_FIELDS = ("document_id", "document_type", "title", "version", "effective_from", "status")
 # Missing optional fields stay absent. In particular, do not invent a policy end date.
-OPTIONAL_FIELDS = (
-    "effective_to",
-    "case_id",
-    "record_type",
-    "source_kind",
-    "source_url",
-    "authority_level",
-    "investigation_status",
-    "offer_status",
-    "primary_cause",
-)
+OPTIONAL_FIELDS = ("effective_to", "source_kind")
 
 
 def load_document(path: Path, corpus_dir: Path) -> tuple[dict, str]:

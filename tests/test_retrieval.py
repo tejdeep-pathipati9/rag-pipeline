@@ -53,7 +53,7 @@ def test_retrieval_preserves_ranking_original_text_and_all_metadata(embeddings):
         "chunk_strategy": "recursive",
         "start_char": 25,
         "end_char": 45,
-        "case_id": "FR-214",
+        "source_kind": "synthetic",
         "body_vector": [0.1, 0.2, 0.3],
     }
     second = {**first, "_id": "chunk-2", "_score": 0.8, "status": "superseded"}
@@ -88,17 +88,20 @@ def test_empty_question_or_namespace_fails_before_model_or_search(
     index.documents.search.assert_not_called()
 
 
-def test_hybrid_search_requests_ten_vector_and_ten_keyword_candidates(embeddings):
+@pytest.mark.parametrize("top_k", [10, 20])
+def test_hybrid_search_passes_candidate_limit_to_both_search_methods(embeddings, top_k):
     """Run two independent ranking methods against the same indexed namespace."""
     search = Mock(return_value=SimpleNamespace(matches=[]))
     index = SimpleNamespace(documents=SimpleNamespace(search=search))
 
-    assert retrieve_hybrid("Hotel accommodation?", embeddings, index, namespace="test") == []
+    assert retrieve_hybrid(
+        "Hotel accommodation?", embeddings, index, namespace="test", top_k=top_k
+    ) == []
 
     assert search.call_count == 2
     vector_request, keyword_request = [call.kwargs for call in search.call_args_list]
     for request in (vector_request, keyword_request):
-        assert request["top_k"] == 10
+        assert request["top_k"] == top_k
         assert request["namespace"] == "test"
         assert request["include_fields"] == ["*"]
     assert vector_request["score_by"][0].values == [0.1, 0.2, 0.3]
@@ -106,6 +109,15 @@ def test_hybrid_search_requests_ten_vector_and_ten_keyword_candidates(embeddings
     assert keyword_request["score_by"][0].query == "Hotel accommodation?"
     assert keyword_request["score_by"][0].fields == ["body"]
     embeddings.embed_documents.assert_called_once()
+
+
+def test_policy_filter_applies_identically_to_both_search_channels(embeddings):
+    search = Mock(return_value=SimpleNamespace(matches=[]))
+    index = SimpleNamespace(documents=SimpleNamespace(search=search))
+    filters = {"document_type": {"$eq": "policy"}, "status": {"$eq": "current"}}
+    retrieve_hybrid("Crew hotel coverage?", embeddings, index, namespace="test", filters=filters)
+    assert len(search.call_args_list) == 2
+    assert all(call.kwargs["filter"] == filters for call in search.call_args_list)
 
 
 def test_fusion_deduplicates_chunks_and_preserves_both_retrieval_scores():

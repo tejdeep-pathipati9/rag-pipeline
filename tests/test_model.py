@@ -1,4 +1,4 @@
-"""Check grounded generation, structured decisions and citation references offline."""
+"""Validate direct policy answers and the real SDK schema path without network calls."""
 
 import json
 from types import SimpleNamespace
@@ -9,27 +9,24 @@ import pytest
 from anthropic import AnthropicFoundry
 from pydantic import ValidationError
 
-from src.model import FlightAnswer, generate_answer
+from src.model import PolicyAnswer, generate_answer
 
 
 @pytest.fixture
 def evidence():
-    """One retrieved chunk, including ranking data that does not belong in the prompt."""
     return [
         {
-            "_id": "chunk-care",
-            "body": "Original Hotel Policy Text.",
+            "_id": "care",
+            "body": "Original policy text.",
             "document_id": "NS-CARE-2026",
             "document_type": "policy",
             "title": "Passenger Care",
-            "version": "2.0",
+            "version": "2.1",
             "effective_from": "2026-01-01",
             "status": "current",
-            "section_ids": ["4", "4.1"],
+            "section_ids": ["4.1"],
             "source_path": "corpus/policies/02_passenger_care_2026.md",
-            "rrf_score": 0.03,
             "rerank_score": 4.0,
-            "vector_score": 0.8,
             "body_vector": [0.1, 0.2],
         }
     ]
@@ -37,135 +34,104 @@ def evidence():
 
 @pytest.fixture
 def response_data():
-    """Structurally valid review decisions; this fixture is not a policy-answer oracle."""
     return {
-        "summary": "More passenger facts are needed.",
-        **{
-            option: {
-                "status": "NEEDS_REVIEW",
-                "explanation": "The travel facts are incomplete.",
-                "citations": ["NS-CARE-2026#4.1"],
-                "missing_facts": ["Travel date and itinerary"],
-            }
-            for option in ("rebooking", "hotel", "refund")
-        },
+        "answer": "Hotel coverage requires an overnight stay away from home.",
+        "citations": ["NS-CARE-2026#4.1"],
+        "missing_information": [],
     }
 
 
 def make_client(answer):
-    """Stand in for the Azure SDK's structured-output response."""
     client = Mock(spec=AnthropicFoundry)
     client.messages.parse.return_value = SimpleNamespace(parsed_output=answer)
     return client
 
 
-def test_generation_sends_retrieved_evidence_and_returns_three_decisions(evidence, response_data):
-    """Use the configured deployment and preserve source text/metadata in the model context."""
-    answer = FlightAnswer.model_validate(response_data)
+def test_generation_preserves_policy_evidence_and_excludes_scores(evidence, response_data):
+    answer = PolicyAnswer.model_validate(response_data)
     client = make_client(answer)
-
-    result = generate_answer("Can I receive a hotel?", evidence, client, model="my-opus-deployment")
-
-    assert result == answer
+    assert (
+        generate_answer(
+            "What is the hotel policy?", evidence, client, model="deployment", as_of="2026-11-20"
+        )
+        == answer
+    )
     request = client.messages.parse.call_args.kwargs
-    assert request["model"] == "my-opus-deployment"
-    assert request["output_format"] is FlightAnswer
+    assert request["model"] == "deployment"
+    assert request["output_format"] is PolicyAnswer
     payload = json.loads(request["messages"][0]["content"])
-    assert payload["question"] == "Can I receive a hotel?"
+    assert payload["question"] == "What is the hotel policy?"
+    assert payload["as_of_date"] == "2026-11-20"
     assert payload["evidence"][0]["body"] == evidence[0]["body"]
-    assert payload["evidence"][0]["version"] == "2.0"
-    assert payload["evidence"][0]["section_ids"] == ["4", "4.1"]
-    assert "rrf_score" not in payload["evidence"][0]
+    assert payload["evidence"][0]["version"] == "2.1"
+    assert payload["allowed_citations"] == ["NS-CARE-2026#4.1"]
     assert "rerank_score" not in payload["evidence"][0]
     assert "body_vector" not in payload["evidence"][0]
 
 
-def test_unknown_citations_are_rejected(evidence, response_data):
-    """A model cannot cite a document or section absent from the supplied chunks."""
-    response_data["hotel"]["citations"] = ["MADE-UP-POLICY#9"]
-    client = make_client(FlightAnswer.model_validate(response_data))
-    with pytest.raises(ValueError, match="unretrieved citation"):
-        generate_answer("Hotel rules?", evidence, client, model="test")
-
-
-def test_definite_decision_requires_a_citation(evidence, response_data):
-    """Do not accept an uncited eligibility assertion."""
-    response_data["hotel"].update(status="ELIGIBLE", citations=[], missing_facts=[])
-    client = make_client(FlightAnswer.model_validate(response_data))
-    with pytest.raises(ValueError, match="requires a citation"):
-        generate_answer("Hotel rules?", evidence, client, model="test")
-
-
-def test_review_decision_explains_missing_facts(evidence, response_data):
-    """A review status must state what prevents a decision."""
-    response_data["hotel"]["missing_facts"] = []
-    client = make_client(FlightAnswer.model_validate(response_data))
-    with pytest.raises(ValueError, match="missing facts"):
-        generate_answer("Hotel rules?", evidence, client, model="test")
-
-
-@pytest.mark.parametrize(
-    ("option", "citations", "missing", "error"),
-    [
-        ("refund", ["NS-CARE-2026#4.1"], ["Passenger choice"], None),
-        ("refund", [], ["Passenger choice"], "requires a citation"),
-        ("refund", ["NS-CARE-2026#4.1"], [], "missing facts"),
-        ("hotel", ["NS-CARE-2026#4.1"], ["Passenger choice"], "only to refunds"),
-    ],
-)
-def test_pending_passenger_decision_is_a_cited_refund_status(
-    evidence, response_data, option, citations, missing, error
+def test_current_questions_receive_a_reference_date_without_rewriting_user_text(
+    evidence, response_data
 ):
-    response_data[option].update(
-        status="NEEDS_PASSENGER_DECISION", citations=citations, missing_facts=missing
-    )
-    client = make_client(FlightAnswer.model_validate(response_data))
-    if error:
-        with pytest.raises(ValueError, match=error):
-            generate_answer("What are my options?", evidence, client, model="test")
-    else:
-        answer = generate_answer("What are my options?", evidence, client, model="test")
-        assert answer.refund.status == "NEEDS_PASSENGER_DECISION"
+    client = make_client(PolicyAnswer(**response_data))
+    question = "Do crew delays qualify for a hotel?"
+    generate_answer(question, evidence, client, model="deployment")
+    payload = json.loads(client.messages.parse.call_args.kwargs["messages"][0]["content"])
+    assert payload["question"] == question
+    from datetime import date
+
+    date.fromisoformat(payload["as_of_date"])
 
 
-def test_no_evidence_returns_review_without_calling_model():
-    """Missing retrieval results produce abstention instead of an unsupported model answer."""
+def test_unknown_citation_is_rejected(evidence, response_data):
+    response_data["citations"] = ["INVENTED#9"]
+    with pytest.raises(ValueError, match="unretrieved citation"):
+        generate_answer(
+            "Hotel policy?", evidence, make_client(PolicyAnswer(**response_data)), model="x"
+        )
+
+
+def test_uncited_answer_must_explain_missing_evidence(evidence, response_data):
+    response_data["citations"] = []
+    with pytest.raises(ValueError, match="missing evidence"):
+        generate_answer(
+            "Hotel policy?", evidence, make_client(PolicyAnswer(**response_data)), model="x"
+        )
+    response_data["missing_information"] = ["Applicable policy clause"]
+    assert generate_answer(
+        "Hotel policy?", evidence, make_client(PolicyAnswer(**response_data)), model="x"
+    ).missing_information
+
+
+def test_no_evidence_abstains_without_calling_model():
     client = make_client(None)
-    answer = generate_answer("Hotel rules?", [], client, model="test")
-    for option in (answer.rebooking, answer.hotel, answer.refund):
-        assert option.status == "NEEDS_REVIEW"
-        assert option.citations == []
-        assert option.missing_facts
+    answer = generate_answer("Hotel policy?", [], client, model="x")
+    assert answer.citations == []
+    assert answer.missing_information
     client.messages.parse.assert_not_called()
 
 
-def test_missing_structured_output_fails_clearly(evidence):
-    """Refusals or incomplete responses must not become accepted eligibility decisions."""
-    client = make_client(None)
+def test_missing_structured_output_fails(evidence):
     with pytest.raises(RuntimeError, match="structured answer"):
-        generate_answer("Hotel rules?", evidence, client, model="test")
+        generate_answer("Hotel policy?", evidence, make_client(None), model="x")
 
 
-def test_empty_question_fails_before_calling_model(evidence):
+def test_empty_question_rejected_before_model_call(evidence):
     client = make_client(None)
     with pytest.raises(ValueError, match="Question"):
-        generate_answer(" ", evidence, client, model="test")
+        generate_answer(" ", evidence, client, model="x")
     client.messages.parse.assert_not_called()
 
 
-def test_response_schema_rejects_unknown_statuses(response_data):
-    response_data["hotel"]["status"] = "PROBABLY"
+def test_policy_schema_rejects_passenger_decision_fields(response_data):
     with pytest.raises(ValidationError):
-        FlightAnswer.model_validate(response_data)
+        PolicyAnswer(**response_data, hotel={"status": "ELIGIBLE"})
 
 
-def test_foundry_sdk_serializes_schema_and_parses_answer_without_network(evidence, response_data):
-    """Exercise the real SDK request/response path against an in-memory HTTP transport."""
-
+def test_foundry_sdk_serializes_and_parses_policy_answer(evidence, response_data):
     def respond(request):
         assert request.url.path == "/anthropic/v1/messages"
         payload = json.loads(request.content)
-        assert payload["model"] == "my-opus-deployment"
+        assert payload["model"] == "deployment"
         assert payload["output_config"]["format"]["type"] == "json_schema"
         return httpx2.Response(
             200,
@@ -173,7 +139,7 @@ def test_foundry_sdk_serializes_schema_and_parses_answer_without_network(evidenc
                 "id": "msg_test",
                 "type": "message",
                 "role": "assistant",
-                "model": "my-opus-deployment",
+                "model": "deployment",
                 "content": [{"type": "text", "text": json.dumps(response_data)}],
                 "stop_reason": "end_turn",
                 "stop_sequence": None,
@@ -186,6 +152,7 @@ def test_foundry_sdk_serializes_schema_and_parses_answer_without_network(evidenc
         base_url="https://example.services.ai.azure.com/anthropic",
         http_client=httpx2.Client(transport=httpx2.MockTransport(respond)),
     ) as client:
-        answer = generate_answer("Hotel rules?", evidence, client, model="my-opus-deployment")
-
-    assert answer.model_dump() == response_data
+        assert (
+            generate_answer("Hotel policy?", evidence, client, model="deployment").model_dump()
+            == response_data
+        )

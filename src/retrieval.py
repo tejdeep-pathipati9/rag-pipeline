@@ -44,7 +44,9 @@ def assemble_evidence(chunks: list[dict], tokenizer, *, token_budget=EVIDENCE_TO
     return evidence
 
 
-def retrieve_dense(question: str, embeddings, index, *, namespace: str) -> list[dict]:
+def retrieve_dense(
+    question: str, embeddings, index, *, namespace: str, filters=None, top_k: int = TOP_K
+) -> list[dict]:
     """Embed a question and return Pinecone's ranked original text and metadata.
 
     Supply the same embedding model and namespace used for ingestion. MiniLM
@@ -55,31 +57,39 @@ def retrieve_dense(question: str, embeddings, index, *, namespace: str) -> list[
         raise ValueError("Question must not be empty.")
     if not namespace.strip():
         raise ValueError("An explicit Pinecone namespace is required.")
+    if top_k <= 0:
+        raise ValueError("top_k must be positive.")
 
     question_vector = embeddings.embed_documents([question])[0]
     response = index.documents.search(
         namespace=namespace,
-        top_k=TOP_K,
+        top_k=top_k,
         score_by=[DenseVectorQuery(values=question_vector, field="body_vector")],
         include_fields=["*"],
+        **({"filter": filters} if filters is not None else {}),
     )
 
     return _extract_hits(response)
 
 
-def retrieve_hybrid(question: str, embeddings, index, *, namespace: str) -> list[dict]:
-    """Retrieve ten candidates per method and return up to twenty unique chunks.
+def retrieve_hybrid(
+    question: str, embeddings, index, *, namespace: str, filters=None, top_k: int = TOP_K
+) -> list[dict]:
+    """Retrieve top_k candidates per method and fuse the unique chunks.
 
     The existing body field supports keyword search with Pinecone's BM25 ranking.
     Reciprocal rank fusion combines the two lists using positions, because BM25
     and cosine scores have different scales. Source text and metadata stay intact.
     """
-    vector_hits = retrieve_dense(question, embeddings, index, namespace=namespace)
+    vector_hits = retrieve_dense(
+        question, embeddings, index, namespace=namespace, filters=filters, top_k=top_k
+    )
     keyword_response = index.documents.search(
         namespace=namespace,
-        top_k=TOP_K,
+        top_k=top_k,
         score_by=[TextQuery(query=question, fields=["body"])],
         include_fields=["*"],
+        **({"filter": filters} if filters is not None else {}),
     )
     keyword_hits = _extract_hits(keyword_response)
     return _fuse_results(vector_hits, keyword_hits)
