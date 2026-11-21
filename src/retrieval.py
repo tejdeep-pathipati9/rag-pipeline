@@ -5,7 +5,9 @@ from math import isfinite
 from pinecone import DenseVectorQuery, TextQuery
 from sentence_transformers import CrossEncoder
 
-TOP_K = 10
+from src.config import AppConfig
+
+TOP_K = AppConfig.retrieval_k
 # Smooth rank contributions; this is separate from the number of candidates.
 RRF_K = 60
 RERANKER_MODEL = "cross-encoder/ms-marco-MiniLM-L6-v2"

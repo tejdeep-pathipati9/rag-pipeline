@@ -169,7 +169,7 @@ def test_evaluation_records_real_context_and_provider_failures(monkeypatch, tmp_
         cases, model, object(), reranker, object(), namespace="test", model="test"
     )
     assert summary["errors"] == 1
-    assert summary["answer_accuracy"] == 0.5
+    assert summary["answer_check_pass_rate"] == 0.5
     assert summary["retrieval_recall_at_5"] == 1
     assert summary["ranked_chunk_recall_at_5"] == 0  # Parent expansion is not better child ranking.
     results = json.loads(runner.RESULTS_FILE.read_text())
@@ -202,11 +202,35 @@ def test_retrieval_only_does_not_generate_answers_or_report_zero_accuracy(
         namespace="test", model="unused", top_k=20, retrieval_only=True,
     )
     generate.assert_not_called()
-    assert summary["answer_accuracy"] is None
+    assert summary["answer_check_pass_rate"] is None
     runner.retrieve_hybrid.assert_called_once_with(
         CASES[0]["question"], embeddings, index, namespace="test", top_k=20,
     )
     assert "Not run (retrieval only)" in runner.RESULTS_FILE.with_suffix(".md").read_text()
+
+
+@pytest.mark.parametrize("search", ["dense", "hybrid"])
+def test_evaluation_search_mode_uses_only_the_selected_retriever(
+    monkeypatch, tmp_path, tokenizer, search
+):
+    monkeypatch.chdir(tmp_path)
+    dense, hybrid = Mock(return_value=[]), Mock(return_value=[])
+    monkeypatch.setattr(runner, "retrieve_dense", dense)
+    monkeypatch.setattr(runner, "retrieve_hybrid", hybrid)
+    monkeypatch.setattr(runner, "rerank_results", Mock(return_value=[]))
+    embeddings, index = SimpleNamespace(tokenizer=tokenizer), object()
+    runner.evaluate_cases(
+        CASES[:1], embeddings, index, object(), None, namespace="test", model="",
+        retrieval_only=True, search=search,
+    )
+    selected, unused = (dense, hybrid) if search == "dense" else (hybrid, dense)
+    selected.assert_called_once_with(
+        CASES[0]["question"], embeddings, index, namespace="test", top_k=20,
+    )
+    unused.assert_not_called()
+    result = json.loads(runner.RESULTS_FILE.read_text())
+    assert result["search"] == search
+    assert f"Search: **{search}**" in runner.render_report(result)
 
 
 @pytest.mark.parametrize(
@@ -279,6 +303,7 @@ def test_evaluation_cli_reports_summary_and_exits_nonzero_for_failed_cases(
     assert evaluate.call_args.kwargs == {
         "namespace": "test", "model": "" if retrieval_only else "test-model",
         "top_k": 20, "retrieval_only": retrieval_only,
+        "search": "hybrid",
     }
     if retrieval_only:
         foundry.assert_not_called()

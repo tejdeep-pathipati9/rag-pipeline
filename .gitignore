@@ -227,6 +227,8 @@ __marimo__/
 .env.*
 !.env.example
 artifacts/runs/
+/docs/
+/artifacts/*.md
 /artifacts/*.json
 .cache/
 
@@ -234,6 +236,9 @@ artifacts/runs/
 /evaluation/*
 !/evaluation/flight_disruption_gold_set.jsonl
 !/evaluation/policy_qa_recorded.json
+!/evaluation/source_failure_recorded.json
+!/evaluation/hybrid_recorded.json
+!/evaluation/chunking_comparison.json
 
 # Markdown Files
 PLAN.md

@@ -22,6 +22,7 @@ from src.retrieval import (
     TOP_K,
     assemble_evidence,
     rerank_results,
+    retrieve_dense,
     retrieve_hybrid,
 )
 
@@ -71,7 +72,7 @@ def score_case(case: dict, hits: list[dict], answer: dict | None) -> dict:
 def render_report(results: dict) -> str:
     """Show the comparison metrics and answers without dumping retrieved chunk bodies."""
     summary = results["summary"]
-    accuracy = summary["answer_accuracy"]
+    check_rate = summary.get("answer_check_pass_rate", summary.get("answer_accuracy"))
     pool_recall = summary.get("candidate_recall")
     chunk_recall = summary.get("ranked_chunk_recall_at_5")
     chunk_recall_ten = summary.get("ranked_chunk_recall_at_10")
@@ -80,6 +81,7 @@ def render_report(results: dict) -> str:
         "# Policy Q&A evaluation",
         "",
         f"Namespace: `{results['namespace']}` · Candidates per search: **{results['top_k']}**",
+        f"Search: **{results.get('search', 'hybrid')}** (before reranking and parent expansion)",
         f"Reference date: {results['as_of_date']} · Questions: {summary['cases']} "
         f"· Service errors: {summary['errors']}",
         "",
@@ -94,13 +96,15 @@ def render_report(results: dict) -> str:
         else "- Ranked chunk recall@10: Not recorded",
         f"- First-five context-entry recall: **{summary['retrieval_recall_at_5']:.1%}**",
         f"- Final context recall: **{summary['retrieval_recall_in_context']:.1%}**",
-        f"- Answer checks: **{accuracy:.1%}**"
-        if accuracy is not None
+        f"- Key-information/citation checks: **{check_rate:.1%}**"
+        if check_rate is not None
         else "- Answer checks: **Not run (retrieval only)**",
         "",
         "Recall uses the listed gold sections. Accepted equivalent clauses may also support "
         "an answer. Parent expansion creates larger context entries; their recall@5 is not "
         "a chunk-ranking score. Section IDs alone do not prove a complete clause was provided.",
+        "Answer checks match phrases and citation IDs; they do not establish semantic correctness "
+        "or reliably handle negation.",
         "",
         "| Question | Pool recall | Chunk recall@5 | Chunk recall@10 | Context | Answer check |",
         "|---|---:|---:|---:|---:|---|",
@@ -169,7 +173,9 @@ def evaluate_cases(
     model,
     top_k: int = TOP_K,
     retrieval_only: bool = False,
+    search: str = "hybrid",
 ) -> dict:
+    retrieve = {"dense": retrieve_dense, "hybrid": retrieve_hybrid}[search]
     records = []
     for case in cases:
         record = {
@@ -182,7 +188,7 @@ def evaluate_cases(
             "ranked_chunk_recall_at_10": 0.0,
         }
         try:
-            candidates = retrieve_hybrid(
+            candidates = retrieve(
                 case["question"], embeddings, index, namespace=namespace, top_k=top_k
             )
             record["candidate_recall"] = score_case(case, candidates, None)[
@@ -224,7 +230,7 @@ def evaluate_cases(
             r["scores"]["section_recall_in_context"] for r in records
         )
         / len(records),
-        "answer_accuracy": None
+        "answer_check_pass_rate": None
         if retrieval_only
         else sum(r["scores"]["answer_pass"] for r in records) / len(records),
     }
@@ -235,6 +241,7 @@ def evaluate_cases(
         "as_of_date": EVALUATION_DATE,
         "top_k": top_k,
         "retrieval_only": retrieval_only,
+        "search": search,
         "summary": summary,
         "cases": records,
     }
@@ -247,6 +254,10 @@ def main(argv=None):
     config = AppConfig.from_env()
     parser = argparse.ArgumentParser(description="Run the fixed policy question benchmark.")
     parser.add_argument("--namespace", default=config.namespace)
+    parser.add_argument(
+        "--search", choices=("dense", "hybrid"), default="hybrid",
+        help="Retrieval method (default: hybrid). Use dense for the vector-only comparison.",
+    )
     parser.add_argument(
         "--top-k",
         type=int,
@@ -303,6 +314,7 @@ def main(argv=None):
                 model=config.llm_model,
                 top_k=args.top_k,
                 retrieval_only=args.retrieval_only,
+                search=args.search,
             )
     print(json.dumps(summary, indent=2))
     if summary["errors"]:

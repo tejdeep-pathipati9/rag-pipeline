@@ -15,7 +15,7 @@ def embeddings():
     return SimpleNamespace(embed_documents=Mock(return_value=[[0.1, 0.2, 0.3]]))
 
 
-def test_vector_retrieval_embeds_question_and_searches_top_10_in_selected_namespace(embeddings):
+def test_vector_retrieval_uses_configured_default_in_selected_namespace(embeddings):
     """Use the query vector for dense search, requesting text and source metadata."""
     search = Mock(return_value=SimpleNamespace(matches=[]))
     index = SimpleNamespace(documents=SimpleNamespace(search=search))
@@ -28,7 +28,7 @@ def test_vector_retrieval_embeds_question_and_searches_top_10_in_selected_namesp
     embeddings.embed_documents.assert_called_once_with(["Am I eligible for a hotel?"])
     request = search.call_args.kwargs
     assert request["namespace"] == "recursive-test"
-    assert request["top_k"] == 10
+    assert request["top_k"] == 20
     assert request["include_fields"] == ["*"]
     assert len(request["score_by"]) == 1
     assert request["score_by"][0].field == "body_vector"
