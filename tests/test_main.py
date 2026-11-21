@@ -59,7 +59,7 @@ def test_default_prompt_reuses_models_and_clients_without_ingestion(monkeypatch,
     prepare.assert_not_called()
     ingest.assert_not_called()
     assert [call.args[0] for call in retrieve.call_args_list] == ["Hotel?", "Refund?"]
-    assert all(call.kwargs == {"namespace": "policy-qa-parent-child-200-40-v1", "top_k": 20}
+    assert all(call.kwargs == {"namespace": "policy-qa-compact-parent-child-v1", "top_k": 20}
                for call in retrieve.call_args_list)
     assert generate.call_count == 2
     assert all(call.args[1] == evidence for call in generate.call_args_list)

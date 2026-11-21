@@ -19,7 +19,7 @@ CHUNKING_STRATEGIES = {
 class AppConfig:
     """Keep defaults and environment settings together; loading creates no clients."""
 
-    namespace: str = "policy-qa-parent-child-200-40-v1"
+    namespace: str = "policy-qa-compact-parent-child-v1"
     batch_size: int = 64
     retrieval_k: int = 20
     embedding_model: str = DEFAULT_MODEL

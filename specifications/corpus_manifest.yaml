@@ -2,40 +2,41 @@ corpus: Northstar policy Q&A
 document_count: 5
 built_as_of: '2026-11-20'
 file_format: markdown
-note: Policy-only cleanup; the NS-CARE-2025 current-status defect remains intentional.
+note: Fictional domestic airline policies. The NS-CARE-2025 current-status defect
+  is intentional.
 documents:
 - file: corpus/policies/01_connection_protection_2026.md
   document_id: NS-CONN-2026
   document_type: policy
   status_as_indexed: current
   effective_from: '2026-01-01'
-  sha256: 1ad4d47b799a85eb7aa122a525057eb6fd201160311e1534d3f8bcfea6f70d95
-  body_word_count: 1655
+  sha256: 5e2b5ec0ca31de04d6b0e5e96d1229daddfbb9c0d4f69543df64c2c1b42319e2
+  body_word_count: 644
 - file: corpus/policies/02_passenger_care_2026.md
   document_id: NS-CARE-2026
   document_type: policy
   status_as_indexed: current
   effective_from: '2026-01-01'
-  sha256: ff2be463f82cac02a1087027837aa51f963802212718bb397977f4a516a67192
-  body_word_count: 1704
+  sha256: 6409ef98d4330b1935632fc22f0fd9eb5f25dae1a81bc1c440fe4a88f44f4b68
+  body_word_count: 696
 - file: corpus/policies/03_refund_policy_2026.md
   document_id: NS-REF-2026
   document_type: policy
   status_as_indexed: current
   effective_from: '2026-01-01'
-  sha256: df21caf29df967f63ffafa6b3e4be75b3b906e2bcb2a52ddbcc723cadfa88bd2
-  body_word_count: 1577
+  sha256: 381046f7b03d3dd44685603fb70d19a6db14a3f605fc1300802f5297122e2683
+  body_word_count: 789
 - file: corpus/policies/04_disruption_classification_2026.md
   document_id: NS-CAUSE-2026
   document_type: policy
   status_as_indexed: current
   effective_from: '2026-01-01'
-  sha256: d6b6e33d44e071b2891ed940ec0c66a282ac94a325f7a85d0d712aa7fda61079
-  body_word_count: 1628
+  sha256: e9cedc796fca2deabc8688f046fb67c88951d2e8c9b661ccc933db8c1c56ba75
+  body_word_count: 734
 - file: corpus/policies/05_passenger_care_2025.md
   document_id: NS-CARE-2025
   document_type: policy
   status_as_indexed: current
   effective_from: '2025-01-01'
-  sha256: abc76a5208777c8a6f80d9b319fdaef6924f2325b0e257080ecd51b5e7d58f4d
-  body_word_count: 1468
+  sha256: c293e9df29f83e6b6dc475666ac0bf3d4b2efb06506fc40e500a9bc9fe5eb0b8
+  body_word_count: 769
