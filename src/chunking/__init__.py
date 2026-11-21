@@ -6,14 +6,16 @@ Choose a concrete strategy, configure it once, then pass source text to it:
     chunks = chunker.chunk_text(text)
 
 BaseChunker handles validation, token limits, source slicing and overlap.
-Subclasses implement only their boundary-selection rule. This shared workflow
-is the Template Method pattern: subclasses customize the boundary-selection
-step. Tokenizer loading, embeddings and vector storage belong elsewhere.
+RecursiveChunker selects paragraph and line boundaries. MarkdownChunker packs
+complete sections and blocks, using the recursive fallback for oversized units.
+Tokenizer loading, embeddings and vector storage belong elsewhere.
 
 The existing chunk_text() function remains a convenience for the baseline.
 """
 
 from .base import BaseChunker
+from .markdown import MarkdownChunker
+from .parent_child import ParentChildChunker
 from .recursive import RecursiveChunker, chunk_text
 
-__all__ = ["BaseChunker", "RecursiveChunker", "chunk_text"]
+__all__ = ["BaseChunker", "MarkdownChunker", "ParentChildChunker", "RecursiveChunker", "chunk_text"]

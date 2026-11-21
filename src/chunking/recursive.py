@@ -16,6 +16,8 @@ class RecursiveChunker(BaseChunker):
     implements only the boundary rule specific to the baseline strategy.
     """
 
+    strategy = "recursive"
+
     def _choose_split_position(self, text: str, max_split_position: int) -> int:
         """Choose the last paragraph or line break within the allowed window."""
         for break_pattern in (PARAGRAPH_BREAK, LINE_BREAK):

@@ -5,14 +5,50 @@ from math import isfinite
 from pinecone import DenseVectorQuery, TextQuery
 from sentence_transformers import CrossEncoder
 
-TOP_K = 10
+from src.config import AppConfig
+
+TOP_K = AppConfig.retrieval_k
 # Smooth rank contributions; this is separate from the number of candidates.
 RRF_K = 60
 RERANKER_MODEL = "cross-encoder/ms-marco-MiniLM-L6-v2"
 RERANKER_REVISION = "233902d25c440f23af6f7d6e94d2946bac0bee0a"
+EVIDENCE_TOKEN_BUDGET = 4000
 
 
-def retrieve_dense(question: str, embeddings, index, *, namespace: str) -> list[dict]:
+def assemble_evidence(chunks: list[dict], tokenizer, *, token_budget=EVIDENCE_TOKEN_BUDGET):
+    """Expand ranked children to stored source sections, deduplicate and bound context.
+
+    Count source content tokens with the embedding tokenizer, excluding prompt/metadata.
+    Scores still describe the selected child. Old namespaces retain child-only evidence.
+    """
+    if token_budget <= 0:
+        raise ValueError("Evidence token budget must be positive.")
+    evidence, seen, used = [], set(), 0
+    for chunk in chunks:
+        record = chunk.copy()
+        if "parent_id" in chunk:
+            record.update(
+                _id=chunk["parent_id"],
+                child_id=chunk["_id"],
+                body=chunk["parent_body"],
+                section_ids=chunk["parent_section_ids"],
+                start_char=chunk["parent_start_char"],
+                end_char=chunk["parent_end_char"],
+            )
+        if record["_id"] in seen:
+            continue
+        tokens = len(tokenizer.encode(record["body"]))
+        if used + tokens > token_budget:
+            continue
+        evidence.append(record)
+        seen.add(record["_id"])
+        used += tokens
+    return evidence
+
+
+def retrieve_dense(
+    question: str, embeddings, index, *, namespace: str, filters=None, top_k: int = TOP_K
+) -> list[dict]:
     """Embed a question and return Pinecone's ranked original text and metadata.
 
     Supply the same embedding model and namespace used for ingestion. MiniLM
@@ -23,31 +59,39 @@ def retrieve_dense(question: str, embeddings, index, *, namespace: str) -> list[
         raise ValueError("Question must not be empty.")
     if not namespace.strip():
         raise ValueError("An explicit Pinecone namespace is required.")
+    if top_k <= 0:
+        raise ValueError("top_k must be positive.")
 
     question_vector = embeddings.embed_documents([question])[0]
     response = index.documents.search(
         namespace=namespace,
-        top_k=TOP_K,
+        top_k=top_k,
         score_by=[DenseVectorQuery(values=question_vector, field="body_vector")],
         include_fields=["*"],
+        **({"filter": filters} if filters is not None else {}),
     )
 
     return _extract_hits(response)
 
 
-def retrieve_hybrid(question: str, embeddings, index, *, namespace: str) -> list[dict]:
-    """Retrieve ten candidates per method and return up to twenty unique chunks.
+def retrieve_hybrid(
+    question: str, embeddings, index, *, namespace: str, filters=None, top_k: int = TOP_K
+) -> list[dict]:
+    """Retrieve top_k candidates per method and fuse the unique chunks.
 
     The existing body field supports keyword search with Pinecone's BM25 ranking.
     Reciprocal rank fusion combines the two lists using positions, because BM25
     and cosine scores have different scales. Source text and metadata stay intact.
     """
-    vector_hits = retrieve_dense(question, embeddings, index, namespace=namespace)
+    vector_hits = retrieve_dense(
+        question, embeddings, index, namespace=namespace, filters=filters, top_k=top_k
+    )
     keyword_response = index.documents.search(
         namespace=namespace,
-        top_k=TOP_K,
+        top_k=top_k,
         score_by=[TextQuery(query=question, fields=["body"])],
         include_fields=["*"],
+        **({"filter": filters} if filters is not None else {}),
     )
     keyword_hits = _extract_hits(keyword_response)
     return _fuse_results(vector_hits, keyword_hits)

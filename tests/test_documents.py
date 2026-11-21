@@ -5,7 +5,7 @@ from unittest.mock import Mock
 import pytest
 from markdown_it.token import Token
 
-from src.chunking import RecursiveChunker
+from src.chunking import MarkdownChunker, RecursiveChunker
 from src.documents import prepare_chunks
 
 
@@ -66,6 +66,17 @@ def test_chunk_ids_are_stable_and_allow_metadata_updates(corpus, tokenizer):
     changed = prepare_chunks(corpus, chunker)
     assert [record["_id"] for record in first] == [record["_id"] for record in changed]
     assert all(record["status"] == "superseded" for record in changed)
+
+
+def test_markdown_chunking_keeps_section_citations_and_separate_ids(corpus, tokenizer):
+    baseline = prepare_chunks(corpus, RecursiveChunker(tokenizer, 100, 0))
+    chunker = MarkdownChunker(tokenizer, 8, 0)
+    structured = prepare_chunks(corpus, chunker)
+
+    assert {tuple(record["section_ids"]) for record in structured} == {("1",), ("1.1",), ("2",)}
+    assert all(record["chunk_strategy"] == "markdown" for record in structured)
+    assert {record["_id"] for record in structured}.isdisjoint(record["_id"] for record in baseline)
+    assert structured == prepare_chunks(corpus, chunker)
 
 
 def test_missing_source_metadata_fails_before_indexing(corpus, tokenizer):

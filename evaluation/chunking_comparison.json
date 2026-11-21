@@ -1,0 +1,61 @@
+{
+  "question_count": 15,
+  "question_sha256": "bf8522196bb80ee39c8d9ce36acc8983d69eeea920ca17f6d1c0086c927fb570",
+  "corpus_manifest_sha256": "67a9aa1495af2f503167e9b14139e0f504526f94570f27cddfc2e90b51a8e9ff",
+  "prompt_sha256": "5f27254b669264939c0c597b9337d19d06febf8a4b7099c38ca702904f03ef06",
+  "as_of_date": "2026-11-20",
+  "search": "hybrid",
+  "top_k_per_method": 20,
+  "chunk_size": 200,
+  "overlap": 40,
+  "evidence_token_budget": 4000,
+  "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+  "embedding_revision": "c9745ed1d9f207416be6d2e6f8de32d1f16199bf",
+  "reranker_model": "cross-encoder/ms-marco-MiniLM-L6-v2",
+  "reranker_revision": "233902d25c440f23af6f7d6e94d2946bac0bee0a",
+  "llm_model": "claude-opus-5",
+  "strategies": {
+    "recursive": {
+      "namespace": "policy-qa-compact-recursive-v1",
+      "chunks": 38,
+      "cases": 15,
+      "errors": 0,
+      "candidate_recall": 1.0,
+      "ranked_chunk_recall_at_5": 0.788888888888889,
+      "ranked_chunk_recall_at_10": 0.888888888888889,
+      "retrieval_recall_at_5": 0.788888888888889,
+      "retrieval_recall_in_context": 1.0,
+      "answer_check_pass_rate": 0.9333333333333333,
+      "whole_section_recall_in_context": 0.5111111111111112,
+      "accepted_path_availability": 1.0
+    },
+    "markdown": {
+      "namespace": "policy-qa-compact-markdown-v1",
+      "chunks": 32,
+      "cases": 15,
+      "errors": 0,
+      "candidate_recall": 1.0,
+      "ranked_chunk_recall_at_5": 0.788888888888889,
+      "ranked_chunk_recall_at_10": 0.8777777777777778,
+      "retrieval_recall_at_5": 0.788888888888889,
+      "retrieval_recall_in_context": 1.0,
+      "answer_check_pass_rate": 0.8,
+      "whole_section_recall_in_context": 1.0,
+      "accepted_path_availability": 1.0
+    },
+    "parent-child": {
+      "namespace": "policy-qa-compact-parent-child-v1",
+      "chunks": 44,
+      "cases": 15,
+      "errors": 0,
+      "candidate_recall": 1.0,
+      "ranked_chunk_recall_at_5": 0.788888888888889,
+      "ranked_chunk_recall_at_10": 0.9111111111111111,
+      "retrieval_recall_at_5": 0.888888888888889,
+      "retrieval_recall_in_context": 1.0,
+      "answer_check_pass_rate": 1.0,
+      "whole_section_recall_in_context": 1.0,
+      "accepted_path_availability": 1.0
+    }
+  }
+}

@@ -1,63 +1,63 @@
-"""Ingest sources, retrieve/rerank with --question, and answer with --generate."""
+"""Ask policy questions interactively or ingest sources."""
 
 import argparse
 import json
-import os
 from collections import Counter
 from pathlib import Path
 
-from anthropic import AnthropicFoundry, APIError
-from dotenv import load_dotenv
+from anthropic import AnthropicFoundry
 from pinecone import NotFoundError, Pinecone
 from sentence_transformers import CrossEncoder
+from transformers.utils import logging as transformers_logging
 
-from src.chunking import RecursiveChunker
+from src.config import CHUNKING_STRATEGIES, AppConfig, ChunkingConfig
 from src.documents import prepare_chunks
-from src.embedding import DEFAULT_MODEL, DEFAULT_REVISION, EmbeddingModel
+from src.embedding import EmbeddingModel
 from src.ingestion import ingest_chunks, validate_index
-from src.model import generate_answer
-from src.retrieval import RERANKER_MODEL, RERANKER_REVISION, TOP_K, rerank_results, retrieve_hybrid
+from src.retrieval import RERANKER_MODEL, RERANKER_REVISION
+from src.terminal import interactive_session
 
 
 def main(argv=None):
-    """Ingest sources, retrieve/rerank evidence, and optionally generate an answer."""
+    """Open the question prompt, index policies, or preview chunks."""
+    config = AppConfig.from_env()
+    chunking = ChunkingConfig()
     parser = argparse.ArgumentParser(
-        description="Ingest sources or retrieve and rerank ten vector and ten keyword candidates."
+        description="Ask Northstar policy questions interactively (default), or index policies."
     )
     parser.add_argument(
-        "--namespace", required=True, help="Namespace for one fixed corpus/model/config."
+        "--namespace", default=config.namespace,
+        help="Indexed namespace (default: %(default)s)."
     )
-    parser.add_argument("--chunk-size", type=int, default=200)
-    parser.add_argument("--overlap", type=int, default=40)
-    parser.add_argument("--batch-size", type=int, default=64)
-    parser.add_argument(
-        "--question", help="Retrieve existing chunks and rerank them with a local cross-encoder."
-    )
-    parser.add_argument(
-        "--generate", action="store_true", help="Generate a cited answer using Azure Foundry."
-    )
-    parser.add_argument(
+    operation = parser.add_mutually_exclusive_group()
+    operation.add_argument("--ingest", action="store_true", help="Embed and index the corpus.")
+    operation.add_argument(
         "--dry-run", action="store_true", help="Inspect chunks without writing to Pinecone."
     )
+    parser.add_argument("--chunk-size", type=int, default=chunking.chunk_size)
+    parser.add_argument("--overlap", type=int, default=chunking.overlap)
+    parser.add_argument(
+        "--chunk-strategy",
+        choices=tuple(CHUNKING_STRATEGIES),
+        help="Choose how to split Markdown during ingestion or a dry run.",
+    )
+    parser.add_argument("--batch-size", type=int, default=config.batch_size)
     args = parser.parse_args(argv)
-    if args.generate and args.question is None:
-        parser.error("--generate requires --question.")
-    if args.question is not None:
-        if not args.question.strip():
-            parser.error("--question must not be empty.")
-        if args.dry_run:
-            parser.error("--dry-run is for ingestion; omit it when using --question.")
-    load_dotenv(".env")
-    llm_api_key = os.getenv("LLM_API_KEY", "")
-    llm_model = os.getenv("LLM_MODEL", "")
-    llm_base_url = os.getenv("LLM_BASE_URL", "")
-    if args.generate and not all((llm_api_key, llm_model, llm_base_url)):
-        parser.error("Set LLM_API_KEY, LLM_MODEL and LLM_BASE_URL in your local .env.")
+    interactive = not (args.ingest or args.dry_run)
+    if args.chunk_strategy and interactive:
+        parser.error("--chunk-strategy applies to ingestion; the namespace selects indexed chunks.")
+    try:
+        config.validate(require_index=not args.dry_run, require_llm=interactive)
+    except ValueError as error:
+        parser.error(str(error))
 
+    if interactive:
+        transformers_logging.disable_progress_bar()
+        print("Loading Northstar Policy Q&A...", flush=True)
     embeddings = EmbeddingModel(
-        os.getenv("EMBEDDING_MODEL", DEFAULT_MODEL),
-        revision=os.getenv("EMBEDDING_REVISION", DEFAULT_REVISION),
-        cache_dir=os.getenv("MODEL_CACHE_DIR", ".cache/models"),
+        config.embedding_model,
+        revision=config.embedding_revision,
+        cache_dir=config.cache_dir,
     )
     summary: dict = {
         "namespace": args.namespace,
@@ -66,18 +66,27 @@ def main(argv=None):
         "dimension": embeddings.dimension,
     }
     chunks: list[dict] = []
-    if args.question is None:
+    if args.ingest or args.dry_run:
         if args.chunk_size > embeddings.max_content_tokens:
             parser.error(
                 f"--chunk-size must be at most {embeddings.max_content_tokens} content tokens."
             )
-        chunker = RecursiveChunker(embeddings.tokenizer, args.chunk_size, args.overlap)
+        chunking = ChunkingConfig(
+            strategy=args.chunk_strategy or chunking.strategy,
+            chunk_size=args.chunk_size,
+            overlap=args.overlap,
+        )
+        try:
+            chunker = chunking.create_chunker(embeddings.tokenizer)
+        except ValueError as error:
+            parser.error(str(error))
         # Retrieval skips preparation entirely: it searches already-indexed chunks.
         chunks = prepare_chunks(Path("corpus"), chunker)
         summary.update(
             {
                 "chunk_size": args.chunk_size,
                 "overlap": args.overlap,
+                "chunk_strategy": chunker.strategy,
                 "documents": len({chunk["document_id"] for chunk in chunks}),
                 "chunks": len(chunks),
                 "chunks_per_document": dict(Counter(chunk["document_id"] for chunk in chunks)),
@@ -89,31 +98,33 @@ def main(argv=None):
             print(json.dumps(summary, indent=2))
             return
 
-    api_key = os.getenv("PINECONE_API_KEY")
-    index_name = os.getenv("PINECONE_INDEX_NAME")
-    if not api_key or not index_name:
-        parser.error("Set PINECONE_API_KEY and PINECONE_INDEX_NAME in your local .env.")
-    with Pinecone(api_key=api_key) as client:
+    with Pinecone(api_key=config.pinecone_api_key) as client:
         try:
-            description = client.describe_index(index_name).to_dict()
+            description = client.describe_index(config.pinecone_index_name).to_dict()
         except NotFoundError:
             parser.error(
-                f"Pinecone index {index_name!r} was not found in this API key's project. "
+                f"Pinecone index {config.pinecone_index_name!r} was not found "
+                "in this API key's project. "
                 "Check PINECONE_INDEX_NAME and PINECONE_API_KEY, or create the index first."
             )
         validate_index(description, embeddings.dimension)
         with client.Index(host=description["host"]) as index:
-            if args.question is not None:
-                summary.update(
-                    {
-                        "question": args.question,
-                        "top_k_per_method": TOP_K,
-                        "retrieval_method": "hybrid",
-                        "matches": retrieve_hybrid(
-                            args.question, embeddings, index, namespace=args.namespace
-                        ),
-                    }
+            if interactive:
+                reranker = CrossEncoder(
+                    RERANKER_MODEL,
+                    revision=RERANKER_REVISION,
+                    cache_folder=config.cache_dir,
+                    device="cpu",
                 )
+                with AnthropicFoundry(
+                    api_key=config.llm_api_key, base_url=config.llm_base_url, timeout=120.0
+                ) as llm:
+                    interactive_session(
+                        embeddings, index, reranker, llm,
+                        namespace=args.namespace, model=config.llm_model,
+                        top_k=config.retrieval_k,
+                    )
+                    return
             else:
                 summary["upserted"] = ingest_chunks(
                     chunks,
@@ -122,30 +133,7 @@ def main(argv=None):
                     namespace=args.namespace,
                     batch_size=args.batch_size,
                 )
-    summary["index"] = index_name
-
-    if args.question is not None:
-        summary["reranker_model"] = RERANKER_MODEL
-        summary["reranker_revision"] = RERANKER_REVISION
-        # Skip loading another model when retrieval found no evidence.
-        if summary["matches"]:
-            reranker = CrossEncoder(
-                RERANKER_MODEL,
-                revision=RERANKER_REVISION,
-                cache_folder=os.getenv("MODEL_CACHE_DIR", ".cache/models"),
-                device="cpu",
-            )
-            summary["matches"] = rerank_results(args.question, summary["matches"], reranker)
-
-    # Generation is opt-in: the existing retrieval command does not call a paid LLM.
-    if args.generate and args.question is not None:
-        with AnthropicFoundry(api_key=llm_api_key, base_url=llm_base_url, timeout=60.0) as llm:
-            try:
-                answer = generate_answer(args.question, summary["matches"], llm, model=llm_model)
-            except (APIError, ValueError, RuntimeError) as error:
-                parser.error(f"Generation failed: {error}")
-        summary["generation_model"] = llm_model
-        summary["answer"] = answer.model_dump()
+    summary["index"] = config.pinecone_index_name
 
     print(json.dumps(summary, indent=2))
 
