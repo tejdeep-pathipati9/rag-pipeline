@@ -4,14 +4,18 @@ import math
 
 
 def ingest_chunks(chunks, embeddings, index, *, namespace: str, batch_size: int = 64) -> int:
-    """Upload prepared chunks in batches and return the number Pinecone acknowledged.
+    """Embed prepared chunks, upsert them, and return the acknowledged record count.
 
-    Each chunk already contains its ID, original body and source metadata.
-    Only body is sent to the embedding model. Copying the chunk keeps its
-    metadata intact and lets callers reuse it for another run.
+    Each input record must contain ``_id``, ``body`` and source metadata from
+    prepare_chunks(). Only the body is embedded; copies of the records receive
+    the vectors and embedding-model identity before upload. Inputs are unchanged.
 
-    A namespace separates one corpus/model/configuration from other experiments
-    in the same index. Reuse it when repeating that unchanged setup.
+    Use a namespace for one corpus/model/chunking configuration. Repeated IDs
+    overwrite existing records; this function does not delete obsolete chunks.
+    Writes happen per batch, so earlier batches remain if a later batch fails.
+
+    Raises ValueError for invalid settings or embedding output, and RuntimeError
+    if Pinecone does not acknowledge a full batch. Service errors propagate.
     """
     if not namespace.strip():
         raise ValueError("An explicit Pinecone namespace is required.")
@@ -22,13 +26,13 @@ def ingest_chunks(chunks, embeddings, index, *, namespace: str, batch_size: int 
     for start in range(0, len(chunks), batch_size):
         batch = chunks[start : start + batch_size]
 
-        # Embed the text of each chunk in the same order as the batch.
+        # Position links a vector to its source: vectors[i] must describe batch[i].
         texts = [chunk["body"] for chunk in batch]
         vectors = embeddings.embed_documents(texts)
         if len(vectors) != len(batch):
             raise ValueError("The embedding result count does not match the chunk count.")
 
-        # Attach each vector to a copy of its original text and metadata.
+        # Keep the searchable body and citation metadata beside the dense vector.
         documents = []
         for chunk, vector in zip(batch, vectors, strict=True):
             # Reject unusable vectors before submitting this batch to Pinecone.
@@ -43,7 +47,7 @@ def ingest_chunks(chunks, embeddings, index, *, namespace: str, batch_size: int 
             document["embedding_revision"] = embeddings.revision
             documents.append(document)
 
-        # Existing IDs are overwritten, so repeating a run does not duplicate them.
+        # Stable IDs make an unchanged rerun overwrite the same records.
         # Acknowledgement confirms the write; fetch/search visibility can lag behind it.
         response = index.documents.upsert(namespace=namespace, documents=documents)
         if response.upserted_count != len(documents):
@@ -56,8 +60,11 @@ def ingest_chunks(chunks, embeddings, index, *, namespace: str, batch_size: int 
 def validate_index(description: dict, embedding_dimension: int) -> None:
     """Check that Pinecone can store the text and the model's vector dimension.
 
-    In this document index, body and body_vector are declared schema fields.
+    Inspect a describe_index() dictionary without changing the remote index.
+    The schema needs a dense ``body_vector`` field with the model's dimension
+    and a string ``body`` field whose text can be returned during retrieval.
     Other uploaded fields, such as document_id and section_ids, are metadata.
+    Raise ValueError when these requirements are not met.
     """
     fields = description.get("schema", {}).get("fields", {})
     vector_field = fields.get("body_vector", {})

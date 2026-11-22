@@ -19,7 +19,15 @@ from src.terminal import interactive_session
 
 
 def main(argv=None):
-    """Open the question prompt, index policies, or preview chunks."""
+    """Run the interactive CLI, ingest Markdown policies, or preview chunk counts.
+
+    argv is an optional argument list; None reads the process command line.
+    The default mode queries existing indexed chunks. --ingest prepares and
+    uploads the corpus, while --dry-run prepares chunks locally and prints a
+    summary without service credentials or network writes. All modes load the
+    embedding model to obtain its tokenizer and input limits; only interactive
+    mode opens an answer-model client and loads the cross-encoder.
+    """
     config = AppConfig.from_env()
     chunking = ChunkingConfig()
     parser = argparse.ArgumentParser(
@@ -95,6 +103,7 @@ def main(argv=None):
             }
         )
         if args.dry_run:
+            # No Pinecone client is opened before this return.
             print(json.dumps(summary, indent=2))
             return
 
@@ -110,6 +119,7 @@ def main(argv=None):
         validate_index(description, embeddings.dimension)
         with client.Index(host=description["host"]) as index:
             if interactive:
+                # Reuse these expensive resources for every question in the session.
                 reranker = CrossEncoder(
                     RERANKER_MODEL,
                     revision=RERANKER_REVISION,

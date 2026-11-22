@@ -7,11 +7,24 @@ from .markdown import MarkdownChunker
 
 
 class ParentChildChunker(MarkdownChunker):
-    """Keep children inside a single parent; parent text is not embedded or truncated."""
+    """Create searchable children linked to complete level-two Markdown sections.
+
+    Children obey the model-token limit and never cross a parent boundary.
+    Parent bounds let document preparation retain the full section for later
+    answer context; the full parent itself is not sent to the embedding model.
+    """
 
     strategy = "parent-child"
 
     def chunk_with_offsets(self, text: str) -> list[TextChunk]:
+        """Return bounded children with child and parent offsets in the original text.
+
+        Each h2 heading starts a parent that ends at the next h2 or document end.
+        Any introductory text forms its own parent. Split each parent using the
+        Markdown strategy, then translate its children's offsets back to the
+        document. Without h2 headings, fall back to ordinary Markdown chunks
+        with no parent metadata. Blank input returns [].
+        """
         line_starts = [0]
         for line in text.splitlines(keepends=True):
             line_starts.append(line_starts[-1] + len(line))
@@ -27,7 +40,9 @@ class ParentChildChunker(MarkdownChunker):
         positions = sorted(boundaries)
         chunks = []
         for start, end in zip(positions[:-1], positions[1:], strict=True):
+            # Split each parent independently so a child cannot mix neighboring chapters.
             for child in super().chunk_with_offsets(text[start:end]):
+                # Child offsets were local to the parent slice; stored offsets are global.
                 chunks.append(
                     TextChunk(child.text, start + child.start, start + child.end, start, end)
                 )

@@ -33,7 +33,12 @@ class AppConfig:
 
     @classmethod
     def from_env(cls):
-        """Read local settings while preserving existing environment overrides."""
+        """Build model, cache and service settings from .env and the environment.
+
+        Existing process environment values take precedence over .env entries.
+        Other fields retain their dataclass defaults. Loading configuration
+        creates no model/client and does not validate credentials or connectivity.
+        """
         load_dotenv(".env")
         return cls(
             embedding_model=os.getenv("EMBEDDING_MODEL", cls.embedding_model),
@@ -47,7 +52,12 @@ class AppConfig:
         )
 
     def validate(self, *, require_index: bool, require_llm: bool):
-        """Require only the services used by the selected operation."""
+        """Raise ValueError listing missing settings for the requested services.
+
+        require_index checks Pinecone settings; require_llm checks answer-model
+        settings. Both can be false for a local dry run. This checks nonempty
+        values only, without making service requests or changing configuration.
+        """
         required = {}
         if require_index:
             required.update(
@@ -66,14 +76,18 @@ class AppConfig:
 
 @dataclass
 class ChunkingConfig:
-    """Choose the default strategy, chunk size and overlap here."""
+    """Choose a splitting strategy and sizes measured in embedding-model tokens."""
 
     strategy: str = "parent-child"
     chunk_size: int = 200
     overlap: int = 40
 
     def create_chunker(self, tokenizer):
-        """Build the selected chunker with these settings."""
+        """Instantiate the selected strategy with the caller's model tokenizer.
+
+        Raise ValueError for an unknown strategy. The chunker's constructor
+        validates chunk size and overlap; this factory does not split any text.
+        """
         if self.strategy not in CHUNKING_STRATEGIES:
             raise ValueError(f"Unknown chunking strategy: {self.strategy}")
         return CHUNKING_STRATEGIES[self.strategy](tokenizer, self.chunk_size, self.overlap)

@@ -17,7 +17,14 @@ class MarkdownChunker(RecursiveChunker):
     strategy = "markdown"
 
     def chunk_with_offsets(self, text: str) -> list[TextChunk]:
-        """Build source slices along parsed heading, paragraph, table and other block boundaries."""
+        """Return token-bounded source slices using parsed Markdown boundaries.
+
+        Keep a section whole when it fits; otherwise consider its top-level
+        blocks, such as paragraphs and tables. Pack neighboring units together
+        within the budget, then use recursive splitting for any oversized unit.
+        Overlap applies inside that fallback, not across every Markdown boundary.
+        All returned character offsets refer to the original input text.
+        """
         line_starts = [0]
         for line in text.splitlines(keepends=True):
             line_starts.append(line_starts[-1] + len(line))
@@ -40,7 +47,7 @@ class MarkdownChunker(RecursiveChunker):
                 boundaries.extend(sorted(block for block in blocks if start < block < end))
             boundaries.append(end)
 
-        # Combine adjacent units to avoid fills consisting of only small headings or clauses.
+        # Pack adjacent units to avoid chunks containing only small headings or clauses.
         chunks = []
         pending = 0
         for start, end in zip(boundaries[:-1], boundaries[1:], strict=True):
@@ -52,7 +59,12 @@ class MarkdownChunker(RecursiveChunker):
         return chunks
 
     def _split_at_offset(self, text: str, offset: int) -> list[TextChunk]:
-        """Translate the shared splitter's positions back to the original document."""
+        """Split a source substring and translate its offsets to document positions.
+
+        offset is the substring's starting character in the original input.
+        The inherited recursive splitter enforces token bounds and overlap;
+        adding offset preserves citation locations after splitting a subsection.
+        """
         return [
             TextChunk(chunk.text, chunk.start + offset, chunk.end + offset)
             for chunk in super().chunk_with_offsets(text)

@@ -11,7 +11,11 @@ from src.documents import OPTIONAL_FIELDS, REQUIRED_FIELDS
 
 
 class PolicyAnswer(BaseModel):
-    """A direct policy answer, its source sections and any missing information."""
+    """Structured answer text, cited DOCUMENT_ID#SECTION_ID values and missing facts.
+
+    Reject unexpected response fields. Citation membership is checked separately
+    against the supplied evidence by generate_answer().
+    """
 
     model_config = ConfigDict(extra="forbid")
     answer: str
@@ -47,7 +51,19 @@ def generate_answer(
     model: str,
     as_of: str | None = None,
 ) -> PolicyAnswer:
-    """Use the configured model and reject citations absent from the retrieved evidence."""
+    """Generate a grounded policy answer and validate its citation IDs.
+
+    Pass assembled evidence records containing bodies, section IDs and source
+    metadata, plus an open Azure Foundry client. Only source fields enter the
+    request; retrieval scores and vectors are excluded. as_of fixes the date for
+    current/historical rules, defaulting to today's date in America/New_York.
+
+    Empty evidence returns a missing-evidence answer without calling the API.
+    Raise ValueError for a blank question, an unretrieved citation or an answer
+    with neither citations nor missing information. Raise RuntimeError when the
+    model returns no structured answer. API/schema errors propagate to the caller.
+    Citation membership alone does not establish that a passage supports a claim.
+    """
     if not question.strip():
         raise ValueError("Question must not be empty.")
     if not chunks:
@@ -56,11 +72,14 @@ def generate_answer(
             citations=[],
             missing_information=["Applicable policy text"],
         )
+    # Pass source evidence, not ranking scores that could be mistaken for authority.
     fields = ("_id", "body", "section_ids", "source_path") + REQUIRED_FIELDS + OPTIONAL_FIELDS
     evidence = [{key: hit[key] for key in fields if key in hit} for hit in chunks]
+    # Restrict citations to section IDs actually present in the assembled context.
     allowed = {
         f"{hit['document_id']}#{section}" for hit in evidence for section in hit["section_ids"]
     }
+    # SDK parsing applies the PolicyAnswer schema before the membership checks below.
     response = client.messages.parse(
         model=model,
         max_tokens=8192,

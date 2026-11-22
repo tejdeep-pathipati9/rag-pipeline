@@ -10,10 +10,20 @@ DEFAULT_REVISION = "c9745ed1d9f207416be6d2e6f8de32d1f16199bf"
 
 
 class EmbeddingModel:
-    """Load one Sentence Transformer and reuse it across all ingestion batches."""
+    """Embed source bodies and questions with one shared Sentence Transformer.
+
+    Expose its tokenizer, vector dimension and usable content-token limit so
+    chunking, ingestion and retrieval use the same model constraints.
+    """
 
     def __init__(self, model_name: str, *, revision: str, cache_dir: str = ".cache/models"):
-        """Load pinned weights and tokenizer files from the same model version."""
+        """Load the specified model revision and matching tokenizer on the CPU.
+
+        Reuse cached files when available; loading may download missing files.
+        Derive vector dimension and content capacity from the model itself,
+        reserving space for its special tokens. Raise ValueError if the model
+        does not report a positive embedding dimension.
+        """
         self.model_name = model_name
         self.revision = revision
         self._model = SentenceTransformer(
@@ -33,11 +43,13 @@ class EmbeddingModel:
         self.max_content_tokens = self._model.max_seq_length - special_tokens
 
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
-        """Return one vector per text, in the same order as the input list.
+        """Return normalized vectors in input order, or [] for an empty list.
 
         Use original chunk text for ingestion and the question text for retrieval.
-        Source metadata stays in the record. Reject oversized text before the
-        model can truncate it.
+        Vectors are ordinary Python lists with self.dimension values each;
+        metadata is stored separately and never concatenated with these texts.
+        Raise ValueError if any input exceeds the model's content-token capacity,
+        before the embedding library can silently truncate a policy condition.
         """
         if not texts:
             return []

@@ -1,4 +1,9 @@
-"""Retrieve vector/keyword candidates and rerank them without changing source records."""
+"""Find candidates, fuse search rankings, rerank, then assemble answer evidence.
+
+Search and reranking operate on embedded child chunks. Evidence assembly can
+replace those children with complete parent sections for the answer model.
+None of these steps decides whether a policy actually grants a benefit.
+"""
 
 from math import isfinite
 
@@ -8,7 +13,7 @@ from sentence_transformers import CrossEncoder
 from src.config import AppConfig
 
 TOP_K = AppConfig.retrieval_k
-# Smooth rank contributions; this is separate from the number of candidates.
+# RRF uses this constant to soften the difference between nearby rank positions.
 RRF_K = 60
 RERANKER_MODEL = "cross-encoder/ms-marco-MiniLM-L6-v2"
 RERANKER_REVISION = "233902d25c440f23af6f7d6e94d2946bac0bee0a"
@@ -16,10 +21,17 @@ EVIDENCE_TOKEN_BUDGET = 4000
 
 
 def assemble_evidence(chunks: list[dict], tokenizer, *, token_budget=EVIDENCE_TOKEN_BUDGET):
-    """Expand ranked children to stored source sections, deduplicate and bound context.
+    """Return ordered source evidence that fits the supplied content-token budget.
 
-    Count source content tokens with the embedding tokenizer, excluding prompt/metadata.
-    Scores still describe the selected child. Old namespaces retain child-only evidence.
+    Pass children in their final relevance order. Parent-child records expand to
+    their stored parent body, section IDs and character offsets; other records
+    stay as children. Include each resulting source ID at most once.
+
+    Count bodies with the embedding tokenizer, excluding prompt and metadata.
+    Skip whole sections that do not fit, then try later entries; never truncate
+    a policy section. Returned dictionaries are copies, and relevance scores
+    still describe the selected child, whose ID is retained as child_id.
+    Raise ValueError for a nonpositive budget; empty input returns an empty list.
     """
     if token_budget <= 0:
         raise ValueError("Evidence token budget must be positive.")
@@ -27,6 +39,7 @@ def assemble_evidence(chunks: list[dict], tokenizer, *, token_budget=EVIDENCE_TO
     for chunk in chunks:
         record = chunk.copy()
         if "parent_id" in chunk:
+            # Citation offsets must describe the expanded body, not the smaller child.
             record.update(
                 _id=chunk["parent_id"],
                 child_id=chunk["_id"],
@@ -36,9 +49,11 @@ def assemble_evidence(chunks: list[dict], tokenizer, *, token_budget=EVIDENCE_TO
                 end_char=chunk["parent_end_char"],
             )
         if record["_id"] in seen:
+            # Several relevant children can point to the same policy chapter.
             continue
         tokens = len(tokenizer.encode(record["body"]))
         if used + tokens > token_budget:
+            # A smaller, lower-ranked section may still fit the remaining budget.
             continue
         evidence.append(record)
         seen.add(record["_id"])
@@ -49,11 +64,16 @@ def assemble_evidence(chunks: list[dict], tokenizer, *, token_budget=EVIDENCE_TO
 def retrieve_dense(
     question: str, embeddings, index, *, namespace: str, filters=None, top_k: int = TOP_K
 ) -> list[dict]:
-    """Embed a question and return Pinecone's ranked original text and metadata.
+    """Return up to top_k semantic matches from the selected indexed namespace.
 
-    Supply the same embedding model and namespace used for ingestion. MiniLM
-    uses the same encoding for documents and questions, so we reuse the existing
-    embed_documents() method. Results keep Pinecone's _id, _score and ranking.
+    Use the same embedding model and revision as ingestion. MiniLM uses the same
+    encoding for questions and documents, so embed_documents() handles both.
+    Pinecone ranks against body_vector and returns stored bodies and metadata;
+    results retain its native _score and order but omit the vector payload.
+
+    Optional filters are passed to Pinecone unchanged. This function does not
+    infer current policy status or effective dates. Raise ValueError for a blank
+    question/namespace or nonpositive top_k; model and service errors propagate.
     """
     if not question.strip():
         raise ValueError("Question must not be empty.")
@@ -77,15 +97,20 @@ def retrieve_dense(
 def retrieve_hybrid(
     question: str, embeddings, index, *, namespace: str, filters=None, top_k: int = TOP_K
 ) -> list[dict]:
-    """Retrieve top_k candidates per method and fuse the unique chunks.
+    """Combine semantic and BM25 keyword matches using reciprocal rank fusion.
 
-    The existing body field supports keyword search with Pinecone's BM25 ranking.
-    Reciprocal rank fusion combines the two lists using positions, because BM25
-    and cosine scores have different scales. Source text and metadata stay intact.
+    Search the same namespace and apply the same optional filters to both
+    methods. top_k is the candidate limit per method, so the fused result can
+    contain up to 2 * top_k unique chunks. It is not a final context limit.
+
+    Keyword search runs on the stored body field. Fusion uses rank positions,
+    because native vector and BM25 scores have different scales. Return source
+    records in fused order; cross-encoder reranking is a separate caller step.
     """
     vector_hits = retrieve_dense(
         question, embeddings, index, namespace=namespace, filters=filters, top_k=top_k
     )
+    # Keyword matching can recover exact policy codes that semantic search ranks low.
     keyword_response = index.documents.search(
         namespace=namespace,
         top_k=top_k,
@@ -98,17 +123,23 @@ def retrieve_hybrid(
 
 
 def rerank_results(question: str, chunks: list[dict], reranker: CrossEncoder) -> list[dict]:
-    """Score each question/text pair, then return all candidates in descending order.
+    """Return copies of all candidates sorted by cross-encoder relevance.
 
-    Load the cross-encoder once in the caller and reuse it. Scores measure model
-    relevance, not eligibility or probabilities. Metadata stays out of model input
-    but is preserved in the returned records, along with the original RRF scores.
+    The caller supplies a loaded CrossEncoder so it can be reused across questions.
+    Unlike vector search, the model reads the question and body together for each
+    candidate. Only body text enters the pair; titles and other metadata do not.
+
+    Add rerank_score while preserving source metadata and earlier search scores.
+    Scores express relevance, not probabilities or policy eligibility. Ties keep
+    input order, and no top-k cutoff is applied here. Empty candidates return [].
+    Raise ValueError for a blank question or missing/non-finite model scores.
     """
     if not question.strip():
         raise ValueError("Question must not be empty.")
     if not chunks:
         return []
 
+    # Rescore each existing candidate; reranking cannot recover an absent chunk.
     pairs = [(question, chunk["body"]) for chunk in chunks]
     scores = [float(score) for score in reranker.predict(pairs, show_progress_bar=False)]
     if len(scores) != len(chunks):
@@ -125,7 +156,11 @@ def rerank_results(question: str, chunks: list[dict], reranker: CrossEncoder) ->
 
 
 def _extract_hits(response) -> list[dict]:
-    """Keep ranked text and metadata, excluding the stored embedding values."""
+    """Convert SDK matches to dictionaries without changing their search order.
+
+    Keep the native score, source text and metadata. Remove body_vector because
+    later ranking, citation display and answer generation do not need its values.
+    """
     results = []
     for match in response.matches:
         hit = match.to_dict()
@@ -135,10 +170,15 @@ def _extract_hits(response) -> list[dict]:
 
 
 def _fuse_results(vector_hits: list[dict], keyword_hits: list[dict]) -> list[dict]:
-    """Merge by chunk ID and add rank contributions, preserving each method's score.
+    """Merge matches by _id and return them in reciprocal-rank-fusion order.
 
-    RRF adds 1 / (60 + rank) for each list containing the chunk. A rank of one
-    contributes 1/61. This combines rankings without a learned reranking model.
+    Each occurrence contributes 1 / (RRF_K + its one-based rank). A chunk found
+    by both methods accumulates both contributions. Original text and metadata
+    come from its first occurrence; method-specific ranks and native scores are
+    stored separately so unlike score scales are never added together.
+
+    Return copied records with rrf_score, breaking score ties by chunk ID.
+    Empty input lists return []. Fusion does not call a model or select parents.
     """
     merged = {}
     for method, hits in (("vector", vector_hits), ("keyword", keyword_hits)):
@@ -146,7 +186,7 @@ def _fuse_results(vector_hits: list[dict], keyword_hits: list[dict]) -> list[dic
             chunk_id = hit["_id"]
             if chunk_id not in merged:
                 merged[chunk_id] = hit.copy()
-                # Replace the unlabelled native score with explicit score fields.
+                # An unlabeled _score would hide whether it came from vector or BM25 search.
                 merged[chunk_id].pop("_score", None)
                 merged[chunk_id]["rrf_score"] = 0.0
 

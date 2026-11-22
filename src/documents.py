@@ -21,8 +21,14 @@ OPTIONAL_FIELDS = ("effective_to", "source_kind")
 def load_document(path: Path, corpus_dir: Path) -> tuple[dict, str]:
     """Return (source_metadata, markdown_body) for one file inside the corpus.
 
-    Metadata is kept out of embedding input. Source values, including the
-    intentionally incorrect historical status, are preserved without repairs.
+    Validate required YAML fields and ISO dates, convert stored scalar values
+    to strings, and add a portable source path and a checksum of the entire file.
+    The body retains original line endings and excludes the YAML frontmatter.
+
+    Metadata is kept out of embedding input. Source values, including incorrect
+    historical status, are preserved without repairs. Raise ValueError for a
+    non-Markdown/outside-corpus path, missing metadata or invalid field values;
+    file-reading and YAML-parsing errors propagate to the caller.
     """
     # Resolve symlinks too, so a corpus entry cannot pull in an outside file.
     if not path.resolve().is_relative_to(corpus_dir.resolve()):
@@ -66,8 +72,11 @@ def load_document(path: Path, corpus_dir: Path) -> tuple[dict, str]:
 def _section_ranges(body: str) -> list[tuple[str, int, int]]:
     """Locate numbered headings using Markdown parsing, excluding fenced code headings.
 
-    A section's direct text ends at the next numbered heading. A chunk may
-    overlap several such ranges; all those IDs belong in its citation metadata.
+    Return (section_id, start, end) tuples in document order, with character
+    offsets relative to body and exclusive end positions. A section's direct
+    text ends at the next numbered heading, including a subsection heading.
+    Text before the first numbered heading has no section ID. A chunk can
+    overlap several ranges; these ranges describe direct text, not nested trees.
     """
     # Markdown headings have line numbers; chunks have character positions.
     # This lookup converts the two into the same coordinate system.
@@ -100,9 +109,16 @@ def _section_ranges(body: str) -> list[tuple[str, int, int]]:
 def prepare_chunks(corpus_dir: Path, chunker) -> list[dict]:
     """Prepare chunks with stable IDs and flat source metadata.
 
-    Positions refer to the Markdown body, excluding YAML frontmatter. Introductory
-    text before the first numbered heading has no section ID; none is invented.
-    Returned records contain _id, body and flat metadata. Ingestion adds vectors later.
+    Load only Markdown files below corpus_dir, split their bodies with the
+    configured chunker, and map each slice to the numbered sections it overlaps.
+    Return records containing _id, body, source metadata and character offsets;
+    embedding and network writes happen later during ingestion.
+
+    Offsets exclude YAML frontmatter. Parent-child chunks additionally store
+    their complete parent text and provenance for later context expansion.
+    IDs depend on source slices and chunking settings, allowing metadata-only
+    corrections to update existing records. Raise ValueError for an empty corpus
+    or duplicate document IDs; loading and chunking errors propagate.
     """
     corpus_dir = Path(corpus_dir)
     paths = sorted(corpus_dir.rglob("*.md"))
@@ -158,6 +174,7 @@ def prepare_chunks(corpus_dir: Path, chunker) -> list[dict]:
                 }
             )
             if chunk.parent_start is not None and chunk.parent_end is not None:
+                # Siblings share one parent ID so retrieval can deduplicate their chapter.
                 start, end = chunk.parent_start, chunk.parent_end
                 parent_text = body[start:end]
                 parent_identity = [document_id, metadata["version"], start, end, parent_text]

@@ -8,7 +8,12 @@ from src.retrieval import TOP_K, assemble_evidence, rerank_results, retrieve_hyb
 
 
 def format_answer(answer: PolicyAnswer, matches: list[dict]) -> str:
-    """Show the answer, source titles and sections, and any missing information."""
+    """Return display text with the answer, distinct citations and missing facts.
+
+    Resolve document titles from the evidence records, falling back to document
+    IDs when a title is unavailable. Preserve citation order while removing
+    duplicates. This formats an already validated answer; it does not check claims.
+    """
     titles = {hit["document_id"]: hit["title"] for hit in matches if "title" in hit}
     lines = [answer.answer]
     if answer.citations:
@@ -26,7 +31,14 @@ def format_answer(answer: PolicyAnswer, matches: list[dict]) -> str:
 def interactive_session(
     embeddings, index, reranker, client, *, namespace: str, model: str, top_k: int = TOP_K
 ):
-    """Keep the models and clients open while answering questions from the terminal."""
+    """Read questions until exit, EOF or interruption, reusing supplied resources.
+
+    Each question runs hybrid retrieval, cross-encoder reranking, parent evidence
+    assembly and grounded generation, in that order. top_k limits candidates
+    per search method, not the number of final evidence sections. Help and blank
+    input do not query services. Expected API/validation errors display a brief
+    message and leave the session available for another question.
+    """
     print("\nNorthstar Policy Q&A\nAsk a question, type /help for examples, or exit to leave.\n")
     while True:
         try:
@@ -44,6 +56,7 @@ def interactive_session(
                 )
                 continue
             print("Looking up the policy...", flush=True)
+            # First find relevant children, then expand their parents for answer context.
             candidates = retrieve_hybrid(
                 question, embeddings, index, namespace=namespace, top_k=top_k
             )

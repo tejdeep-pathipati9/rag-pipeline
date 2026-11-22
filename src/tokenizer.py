@@ -14,7 +14,12 @@ class ModelTokenizer:
     def __init__(
         self, model_name: str, *, revision: str | None = None, cache_dir: str | None = None
     ):
-        """Load the tokenizer files from the local cache, a directory, or Hugging Face."""
+        """Load vocabulary and tokenization rules without loading model weights.
+
+        model_name is a local directory or Hugging Face ID. Use the embedding
+        model's revision and cache directory to keep chunk token counts aligned
+        with the inputs that model will actually read.
+        """
         # The model name selects its vocabulary and rules; revision selects their version.
         self._tokenizer = AutoTokenizer.from_pretrained(
             model_name, revision=revision, cache_dir=cache_dir
@@ -25,6 +30,7 @@ class ModelTokenizer:
 
         Exclude special tokens such as [CLS] and [SEP]. Keep the entire input,
         even when it is too long for the model, so the chunker can split it.
+        These IDs measure model tokens, not words or characters.
         """
         return self._tokenizer.encode(
             text,
@@ -48,6 +54,8 @@ class ModelTokenizer:
         text[0:5] retrieves "Hotel" directly from the original source. Hugging Face
         calls these positions "offsets" and returns them as "offset_mapping".
         The end position is excluded, just like a normal Python string slice.
+        Special tokens and truncation are disabled. This operation requires a
+        tokenizer that supports offset mappings, such as MiniLM's fast tokenizer.
         """
         # Calling the tokenizer object gives us a dictionary-like result with
         # both IDs and positions; encode() alone would return only the IDs.

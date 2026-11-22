@@ -10,6 +10,7 @@ class TextChunk:
 
     input_text[start:end] reproduces text. end is excluded, as in Python slices.
     These are character positions, independent of the model's token IDs.
+    Optional parent bounds locate the complete section containing this child.
     """
 
     text: str
@@ -28,7 +29,11 @@ class BaseChunker(ABC):
     """
 
     def __init__(self, tokenizer, chunk_size: int, overlap: int):
-        """Store the shared tokenizer and validate sizes, which are token counts."""
+        """Store a model tokenizer and validate chunk-size and overlap token counts.
+
+        The tokenizer must provide encode() and encode_with_offsets(). Raise
+        ValueError unless chunk_size is positive and 0 <= overlap < chunk_size.
+        """
         if chunk_size <= 0:
             raise ValueError("chunk_size must be greater than zero.")
         if not 0 <= overlap < chunk_size:
@@ -39,15 +44,23 @@ class BaseChunker(ABC):
         self.overlap = overlap
 
     def chunk_text(self, text: str) -> list[str]:
-        """Return just the text when callers do not need citation positions."""
+        """Return source chunks as strings, omitting their citation offsets.
+
+        Delegate to the concrete strategy's chunk_with_offsets() implementation,
+        so callers get the same boundaries with or without position metadata.
+        """
         return [chunk.text for chunk in self.chunk_with_offsets(text)]
 
     def chunk_with_offsets(self, text: str) -> list[TextChunk]:
         """Create token-bounded chunks together with their original source positions.
 
         Copy source text directly to preserve casing and internal whitespace.
-        Whitespace at split boundaries is removed; short input is unchanged.
-        Repeat the requested overlap when possible while always moving forward.
+        Blank input returns []; nonblank input that fits is returned unchanged.
+        Longer input is split using the subclass boundary rule, with whitespace
+        trimmed at split edges. Repeat the requested overlap when possible while
+        always moving forward. Every returned TextChunk locates its source slice
+        with character offsets, not token indices. Impossible token limits raise
+        ValueError rather than returning an empty or oversized chunk.
         """
         if not text.strip():
             return []
@@ -84,7 +97,15 @@ class BaseChunker(ABC):
         return chunks
 
     def _create_chunk(self, text: str, token_positions: list[tuple[int, int]]) -> str:
-        """Ask the strategy for a boundary, then return source text that fits."""
+        """Return one source prefix within chunk_size, using the strategy's boundary.
+
+        token_positions describes text and must include more than chunk_size
+        tokens. Translate the safe token boundary into a character limit, ask
+        the subclass for a split, then recount the actual substring because a
+        word fragment can tokenize differently from the full document.
+        Raise ValueError for an invalid boundary or an indivisible character
+        that cannot fit the budget.
+        """
         last_token_end = token_positions[self.chunk_size - 1][1]
         next_token_start = token_positions[self.chunk_size][0]
 
@@ -115,17 +136,24 @@ class BaseChunker(ABC):
 
     @abstractmethod
     def _choose_split_position(self, text: str, max_split_position: int) -> int:
-        """Choose a character position greater than zero and at most the supplied limit.
+        """Choose a source-character split in the range (0, max_split_position].
 
-        This is the strategy-specific step. The base class handles the rest
-        of chunk creation, including token counting and overlap.
+        Subclasses can inspect text for structural breaks but must honor this
+        safe upper bound. The base class handles token counting, actual slicing
+        and overlap after the strategy has selected its preferred boundary.
         """
         raise NotImplementedError
 
     def _choose_overlap_start(
         self, token_positions: list[tuple[int, int]], split_position: int
     ) -> int:
-        """Find where the next chunk starts, including context from the saved chunk."""
+        """Return the next start character within the chunk just emitted.
+
+        Use token offsets to repeat the last overlap tokens when that still
+        advances the input. split_position is the emitted chunk's end; return
+        it when overlap is disabled or would repeat the entire chunk. Shared
+        character offsets must not cause the splitting loop to stall.
+        """
         # No overlap, or a chunk too short to repeat without getting stuck.
         if self.overlap == 0 or len(token_positions) <= self.overlap:
             return split_position
